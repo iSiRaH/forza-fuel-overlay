@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+out/
+build/
+.vite/
+.next/
+
+# Data & Logs
+data/database/*
+data/sessions/*
+data/telemetry/*
+# Keep the directory structure for data
+!data/database/.gitkeep
+!data/sessions/.gitkeep
+!data/telemetry/.gitkeep
+!data/telemetry/processed/.gitkeep
+!data/telemetry/raw/.gitkeep
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Electron
+dist_electron/

@@ -60,8 +60,8 @@ describe('Speed Measurement Accuracy & Unit Conversions', () => {
   it('should measure speed parser execution performance (benchmark)', () => {
     const packet = Buffer.alloc(323);
     packet.writeInt32LE(1, 0); // isRaceOn
-    packet.writeFloatLE(75.5, 244); // speed = 75.5 m/s (~271.8 km/h)
-    packet.writeFloatLE(0.85, 280); // fuel = 85%
+    packet.writeFloatLE(75.5, 40); // velocityZ = 75.5 m/s (~271.8 km/h)
+    packet.writeFloatLE(0.85, 276); // fuel = 85%
 
     const iterations = 50000;
     const startTime = performance.now();

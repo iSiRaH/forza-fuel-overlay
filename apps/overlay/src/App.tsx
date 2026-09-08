@@ -63,7 +63,7 @@ export function App() {
         <div className="gear-display">
           <span className="gear-label">GEAR</span>
           <span className="gear-value">
-            {telemetry?.gear === undefined || telemetry.gear === 0 ? 'N' : telemetry.gear}
+            {telemetry?.gear === undefined || telemetry.gear === 0 ? 'N' : telemetry.gear === -1 ? 'R' : telemetry.gear}
           </span>
         </div>
 

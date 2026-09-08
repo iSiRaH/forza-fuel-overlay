@@ -24,7 +24,7 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
     <div className="telemetry-card">
       <div className="card-header">
         <span className="card-title">⚙️ ENGINE & INPUTS</span>
-        <span className="gear-badge">GEAR {gear === 0 ? 'N' : gear}</span>
+        <span className="gear-badge">GEAR {gear === 0 ? 'N' : gear === -1 ? 'R' : gear}</span>
       </div>
 
       <div className="inputs-row">

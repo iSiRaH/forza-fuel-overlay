@@ -27,7 +27,7 @@ export function logTelemetryData(
   let outputMessage: string;
 
   if (options.formatted) {
-    outputMessage = `${prefix}Lap: ${lap} | Time: ${raceTime}s | Speed: ${speedKmH} km/h | RPM: ${rpm}/${maxRpm} | Gear: ${gear} | Fuel: ${fuelPct}%`;
+    outputMessage = `${prefix}Lap: ${lap} | Time: ${raceTime}s | Speed: ${speedKmH} km/h | RPM: ${rpm}/${maxRpm} | Gear: ${gear === 0 ? 'N' : gear === -1 ? 'R' : gear} | Fuel: ${fuelPct}%`;
   } else {
     outputMessage = `${prefix}${JSON.stringify({
       isRaceOn: data.isRaceOn ?? false,

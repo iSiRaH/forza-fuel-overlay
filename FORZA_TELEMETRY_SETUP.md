@@ -53,29 +53,29 @@ Follow these steps inside **Forza Horizon 6 (2026)**:
 
 Forza outputs two binary packet layouts:
 
-- **Sled Format (311 bytes)**: Basic car physics (position, velocity, RPM, acceleration).
-- **Dash Format (323/331 bytes)**: Full telemetry including fuel level, lap metrics, gear, race status, and tire temperatures.
+- **Sled Format (232 bytes)**: Basic car physics (position, velocity vectors, RPM, acceleration, tire slip).
+- **Dash Format (311/323/331 bytes)**: Full telemetry including fuel level, lap metrics, gear, race status, and tire temperatures.
 
 ### Key Offset Structure (Dash Format):
 
 | Offset (Bytes) | Data Type | Field | Description |
 |---|---|---|---|
-| `0` | `s32` (int32) | `isRaceOn` | 0 when paused/in menu, 1 when racing |
+| `0` | `s32` (int32) | `isRaceOn` | 0 when paused/in menu, 1 when driving/racing |
 | `4` | `u32` (uint32) | `timestampMS` | Game timestamp in milliseconds |
 | `8` | `f32` (float32) | `engineMaxRpm` | Maximum engine RPM |
 | `16` | `f32` (float32) | `currentEngineRpm` | Current engine RPM |
-| `244` | `f32` (float32) | `speed` | Speed in meters per second (`m/s`) |
-| `280` | `f32` (float32) | `fuel` | Remaining fuel ratio (0.0 to 1.0) |
-| `284` | `f32` (float32) | `distanceTraveled` | Distance traveled in meters |
-| `288` | `f32` (float32) | `bestLap` | Best lap time in seconds |
-| `292` | `f32` (float32) | `lastLap` | Last lap time in seconds |
-| `296` | `f32` (float32) | `currentLap` | Current lap time in seconds |
-| `300` | `f32` (float32) | `currentRaceTime` | Current total race time in seconds |
-| `304` | `u16` (uint16) | `lapNumber` | Current lap number |
-| `306` | `u8` (uint8) | `racePosition` | Position in race |
-| `307` | `u8` (uint8) | `accel` | Accelerator pedal (0-255) |
-| `308` | `u8` (uint8) | `brake` | Brake pedal (0-255) |
-| `310` | `u8` (uint8) | `gear` | Current gear |
+| `32, 36, 40` | `f32` (float32) | `vx, vy, vz` | Velocity vector in m/s (speed = magnitude) |
+| `276` | `f32` (float32) | `fuel` | Remaining fuel ratio (0.0 to 1.0) |
+| `280` | `f32` (float32) | `distanceTraveled` | Distance traveled in meters |
+| `284` | `f32` (float32) | `bestLap` | Best lap time in seconds |
+| `288` | `f32` (float32) | `lastLap` | Last lap time in seconds |
+| `292` | `f32` (float32) | `currentLap` | Current lap time in seconds |
+| `296` | `f32` (float32) | `currentRaceTime` | Current total race time in seconds |
+| `300` | `u16` (uint16) | `lapNumber` | Current lap number |
+| `302` | `u8` (uint8) | `racePosition` | Position in race |
+| `303` | `u8` (uint8) | `accel` | Accelerator pedal (0-255) |
+| `304` | `u8` (uint8) | `brake` | Brake pedal (0-255) |
+| `307` | `u8` (uint8) | `rawGear` | Gear (0=R, 1=N, 2=1st, 3=2nd, etc.) |
 
 ---
 
@@ -94,9 +94,17 @@ const HOST = '0.0.0.0';
 const server = dgram.createSocket('udp4');
 
 function parseForzaDashPacket(buffer: Buffer): Partial<ForzaTelemetryData> {
-  if (buffer.length < 311) {
+  if (buffer.length < 232) {
     throw new Error('Packet size too small to be Forza telemetry');
   }
+
+  const vx = buffer.length >= 44 ? buffer.readFloatLE(32) : 0;
+  const vy = buffer.length >= 44 ? buffer.readFloatLE(36) : 0;
+  const vz = buffer.length >= 44 ? buffer.readFloatLE(40) : 0;
+  const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+
+  const rawGear = buffer.length >= 308 ? buffer.readUInt8(307) : 1;
+  const gear = rawGear === 0 ? -1 : rawGear === 1 ? 0 : rawGear - 1;
 
   return {
     isRaceOn: buffer.readInt32LE(0) === 1,
@@ -104,17 +112,18 @@ function parseForzaDashPacket(buffer: Buffer): Partial<ForzaTelemetryData> {
     engineMaxRpm: buffer.readFloatLE(8),
     engineIdleRpm: buffer.readFloatLE(12),
     currentEngineRpm: buffer.readFloatLE(16),
-    speed: buffer.readFloatLE(244),
-    fuel: buffer.length >= 284 ? buffer.readFloatLE(280) : 1.0,
-    bestLap: buffer.length >= 292 ? buffer.readFloatLE(288) : 0,
-    lastLap: buffer.length >= 296 ? buffer.readFloatLE(292) : 0,
-    currentLap: buffer.length >= 300 ? buffer.readFloatLE(296) : 0,
-    currentRaceTime: buffer.length >= 304 ? buffer.readFloatLE(300) : 0,
-    lapNumber: buffer.length >= 306 ? buffer.readUInt16LE(304) : 0,
-    racePosition: buffer.length >= 307 ? buffer.readUInt8(306) : 0,
-    accel: buffer.length >= 308 ? buffer.readUInt8(307) : 0,
-    brake: buffer.length >= 309 ? buffer.readUInt8(308) : 0,
-    gear: buffer.length >= 311 ? buffer.readUInt8(310) : 0,
+    speed,
+    fuel: buffer.length >= 280 ? buffer.readFloatLE(276) : 1.0,
+    distanceTraveled: buffer.length >= 284 ? buffer.readFloatLE(280) : 0,
+    bestLap: buffer.length >= 288 ? buffer.readFloatLE(284) : 0,
+    lastLap: buffer.length >= 292 ? buffer.readFloatLE(288) : 0,
+    currentLap: buffer.length >= 296 ? buffer.readFloatLE(292) : 0,
+    currentRaceTime: buffer.length >= 300 ? buffer.readFloatLE(296) : 0,
+    lapNumber: buffer.length >= 302 ? buffer.readUInt16LE(300) : 0,
+    racePosition: buffer.length >= 303 ? buffer.readUInt8(302) : 0,
+    accel: buffer.length >= 304 ? buffer.readUInt8(303) : 0,
+    brake: buffer.length >= 305 ? buffer.readUInt8(304) : 0,
+    gear,
   };
 }
 

@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev\" \"pnpm --filter overlay dev\"",
+    "dev:mock": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev:mock\" \"pnpm --filter overlay dev\"",
+    "start": "pnpm run dev",
+    "test": "pnpm --filter telemetry test"
   },
   "keywords": [],
   "author": "",

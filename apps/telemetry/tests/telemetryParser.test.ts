@@ -36,6 +36,10 @@ describe('Forza UDP Telemetry Packet Parser', () => {
     packet.writeFloatLE(6000, 16);
     // velocityZ = 60 m/s (~216 km/h) at offset 40
     packet.writeFloatLE(60, 40);
+    // rawPower = 300,000 Watts at offset 248 (~402.3 HP)
+    packet.writeFloatLE(300000, 248);
+    // rawTorque = 450 N-m at offset 252
+    packet.writeFloatLE(450, 252);
     // fuel = 0.80 (80%) at offset 276
     packet.writeFloatLE(0.8, 276);
     // distanceTraveled = 1500m at offset 280
@@ -44,6 +48,10 @@ describe('Forza UDP Telemetry Packet Parser', () => {
     packet.writeFloatLE(45.5, 296);
     // lapNumber = 3 at offset 300
     packet.writeUInt16LE(3, 300);
+    // accel = 255 (100% throttle) at offset 303
+    packet.writeUInt8(255, 303);
+    // brake = 0 (0% brake) at offset 304
+    packet.writeUInt8(0, 304);
     // rawGear = 6 (5th gear) at offset 307
     packet.writeUInt8(6, 307);
 
@@ -54,10 +62,40 @@ describe('Forza UDP Telemetry Packet Parser', () => {
     assert.equal(parsed.engineMaxRpm, 8500);
     assert.equal(parsed.currentEngineRpm, 6000);
     assert.equal(parsed.speed, 60);
+    assert.ok(Math.abs((parsed.power ?? 0) - 402.3) < 1.0);
+    assert.equal(parsed.torque, 450);
     assert.ok(Math.abs((parsed.fuel ?? 0) - 0.8) < 1e-4);
     assert.equal(parsed.distanceTraveled, 1500);
     assert.equal(parsed.currentRaceTime, 45.5);
     assert.equal(parsed.lapNumber, 3);
+    assert.equal(parsed.accel, 255);
+    assert.equal(parsed.brake, 0);
     assert.equal(parsed.gear, 5);
+  });
+
+  it('should correctly convert low power in Watts without treating it as raw HP', () => {
+    const packet = Buffer.alloc(323);
+    packet.writeInt32LE(1, 0);
+    // rawPower = 1500 Watts at offset 248 (~2.01 HP, low load / idle)
+    packet.writeFloatLE(1500, 248);
+
+    const parsed = parseForzaTelemetryPacket(packet);
+    assert.ok(Math.abs((parsed.power ?? 0) - 2.01) < 0.1, `Expected ~2.01 HP, got ${parsed.power}`);
+  });
+
+  it('should correctly map raw gear 0 to Reverse (-1) and 1 to Neutral (0)', () => {
+    const packetR = Buffer.alloc(323);
+    packetR.writeInt32LE(1, 0);
+    packetR.writeUInt8(0, 307); // Raw gear 0 = Reverse
+
+    const parsedR = parseForzaTelemetryPacket(packetR);
+    assert.equal(parsedR.gear, -1);
+
+    const packetN = Buffer.alloc(323);
+    packetN.writeInt32LE(1, 0);
+    packetN.writeUInt8(1, 307); // Raw gear 1 = Neutral
+
+    const parsedN = parseForzaTelemetryPacket(packetN);
+    assert.equal(parsedN.gear, 0);
   });
 });

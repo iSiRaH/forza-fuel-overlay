@@ -17,8 +17,18 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
   accel,
   brake,
 }) => {
-  const accelPct = Math.min(100, Math.round((accel / 255) * 100));
-  const brakePct = Math.min(100, Math.round((brake / 255) * 100));
+  // Support 0-255 (raw uint8), 0-100 (percentage), or 0-1 (float fraction)
+  const accelPct = accel > 100
+    ? Math.min(100, Math.round((accel / 255) * 100))
+    : accel <= 1 && accel > 0
+      ? Math.min(100, Math.round(accel * 100))
+      : Math.min(100, Math.round(accel));
+
+  const brakePct = brake > 100
+    ? Math.min(100, Math.round((brake / 255) * 100))
+    : brake <= 1 && brake > 0
+      ? Math.min(100, Math.round(brake * 100))
+      : Math.min(100, Math.round(brake));
 
   return (
     <div className="telemetry-card">

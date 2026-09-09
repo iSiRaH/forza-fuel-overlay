@@ -37,9 +37,13 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
   const carPerformanceIndex = buffer.length >= 224 ? buffer.readInt32LE(220) : 0;
 
   // Power and Torque (Dash offsets 248, 252)
+  // Forza sends raw Power in Watts (1 HP = 745.699872 Watts)
   const rawPower = buffer.length >= 252 ? buffer.readFloatLE(248) : 0;
-  const power = rawPower > 2000 ? rawPower / 745.7 : rawPower;
-  const torque = buffer.length >= 256 ? buffer.readFloatLE(252) : 0;
+  const power = Math.max(0, rawPower / 745.7);
+
+  // Forza sends Torque in Newton-meters (N·m)
+  const rawTorque = buffer.length >= 256 ? buffer.readFloatLE(252) : 0;
+  const torque = Math.max(0, rawTorque);
 
   // Dash telemetry fields (offsets 276..308)
   const fuel = buffer.length >= 280 ? buffer.readFloatLE(276) : 1.0;
@@ -54,17 +58,37 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
   const brake = buffer.length >= 305 ? buffer.readUInt8(304) : 0;
   const clutch = buffer.length >= 306 ? buffer.readUInt8(305) : 0;
   const handBrake = buffer.length >= 307 ? buffer.readUInt8(306) : 0;
-  const rawGear = buffer.length >= 308 ? buffer.readUInt8(307) : 1;
   const steer = buffer.length >= 309 ? buffer.readInt8(308) : 0;
 
   // Convert Forza raw gear encoding (0=R, 1=N, 2=1st, 3=2nd...) to standard gear numbers
   let gear = 0;
-  if (rawGear === 0) {
-    gear = -1; // Reverse
-  } else if (rawGear === 1) {
-    gear = 0; // Neutral
-  } else {
-    gear = rawGear - 1; // 1st, 2nd, 3rd, etc.
+  if (buffer.length >= 308) {
+    const rawGear = buffer.readUInt8(307);
+    if (rawGear === 0) {
+      gear = -1; // Reverse
+    } else if (rawGear === 1) {
+      gear = 0; // Neutral
+    } else {
+      gear = rawGear - 1; // 1st, 2nd, 3rd, etc.
+    }
+  } else if (buffer.length >= 116 && currentEngineRpm > 500) {
+    // Sled mode fallback: calculate drive ratio from Engine RPM vs Wheel Rotation Speed (rad/s)
+    const wheelFL = Math.abs(buffer.readFloatLE(100));
+    const wheelFR = Math.abs(buffer.readFloatLE(104));
+    const wheelRL = Math.abs(buffer.readFloatLE(108));
+    const wheelRR = Math.abs(buffer.readFloatLE(112));
+    const avgWheelRadSec = (wheelFL + wheelFR + wheelRL + wheelRR) / 4;
+    const wheelRpm = avgWheelRadSec * 9.5493;
+
+    if (wheelRpm > 10) {
+      const driveRatio = currentEngineRpm / wheelRpm;
+      if (driveRatio > 10.0) gear = 1;
+      else if (driveRatio > 6.5) gear = 2;
+      else if (driveRatio > 4.5) gear = 3;
+      else if (driveRatio > 3.2) gear = 4;
+      else if (driveRatio > 2.3) gear = 5;
+      else gear = 6;
+    }
   }
 
   return {

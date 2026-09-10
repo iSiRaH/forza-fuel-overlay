@@ -5,14 +5,14 @@ import type { ForzaTelemetryData, TelemetryControlMessage } from '../../../../pa
 
 export interface WebSocketServerOptions {
   port?: number;
-  onControlMessage?: (message: TelemetryControlMessage) => void;
+  onControlMessage?: ((message: TelemetryControlMessage) => void) | undefined;
 }
 
 export class TelemetryWebSocketServer {
   private wss: WebSocketServer | null = null;
   private port: number;
   private clients: Set<WebSocket> = new Set();
-  private onControlMessage?: (message: TelemetryControlMessage) => void;
+  private onControlMessage?: ((message: TelemetryControlMessage) => void) | undefined;
 
   constructor(options: WebSocketServerOptions = {}) {
     this.port = options.port || parseInt(process.env.FORZA_WS_PORT || '8080', 10);

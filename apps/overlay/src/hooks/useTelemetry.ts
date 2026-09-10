@@ -117,6 +117,13 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
   const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 3.0;
   const fuelConsumptionRate = telemetry?.fuelConsumptionRate ?? 0;
 
+  const carName = telemetry?.carName ?? (telemetry?.carOrdinal ? `Forza Car #${telemetry.carOrdinal}` : '---');
+  const piClassName = telemetry?.piClassName ?? 'S1';
+  const piRating = telemetry?.piRating ?? (telemetry?.carPerformanceIndex ?? 800);
+  const piBadgeColor = telemetry?.piBadgeColor ?? '#ffffff';
+  const piBadgeBg = telemetry?.piBadgeBg ?? 'linear-gradient(135deg, #6600cc, #b84dff)';
+  const carOrdinal = telemetry?.carOrdinal ?? 0;
+
   return {
     telemetry,
     isConnected,
@@ -140,6 +147,11 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     fuelConsumptionRate,
     isFuelLow,
     isFuelCritical,
+    carName,
+    piClassName,
+    piRating,
+    piBadgeColor,
+    piBadgeBg,
+    carOrdinal,
   };
 }
-

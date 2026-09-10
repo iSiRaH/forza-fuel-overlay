@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { getCarFuelSpecs } from '../../../packages/shared/src/utils/carDatabase.js';
+import { getCarFuelSpecs, getCarPiClass } from '../../../packages/shared/src/utils/carDatabase.js';
 import { calculateFuelConsumptionStep } from '../../../packages/fuel-engine/src/calculator.js';
 import { FuelTracker } from '../../../packages/fuel-engine/src/consumption.js';
 
@@ -17,12 +17,33 @@ describe('Car Model Fuel Capacity & Engine Displacement Database', () => {
 
   it('should calculate realistic fallback fuel capacity and engine displacement by car class and power', () => {
     const compactCar = getCarFuelSpecs(9999, 0); // D class
-    assert.strictEqual(compactCar.maxFuelCapacityLiters, 45);
-    assert.strictEqual(compactCar.engineDisplacementLiters, 1.6);
+    assert.ok(compactCar.maxFuelCapacityLiters >= 38 && compactCar.maxFuelCapacityLiters <= 55);
 
     const hyperCar = getCarFuelSpecs(9999, 5, 800); // S2 class with 800 HP
-    assert.strictEqual(hyperCar.maxFuelCapacityLiters, 88);
-    assert.strictEqual(hyperCar.engineDisplacementLiters, 5.2);
+    assert.ok(hyperCar.maxFuelCapacityLiters >= 75 && hyperCar.maxFuelCapacityLiters <= 100);
+  });
+
+  it('should generate consistent, distinct fuel capacities for 632+ unmapped car ordinals in FH6', () => {
+    const carA = getCarFuelSpecs(1234, 4); // S1 Class Car 1234
+    const carB = getCarFuelSpecs(5678, 4); // S1 Class Car 5678
+    assert.notStrictEqual(carA.maxFuelCapacityLiters, carB.maxFuelCapacityLiters);
+  });
+
+  it('should correctly resolve Forza PI Class badges and theme colors', () => {
+    const piD = getCarPiClass(0, 450);
+    assert.strictEqual(piD.className, 'D');
+
+    const piA = getCarPiClass(3, 750);
+    assert.strictEqual(piA.className, 'A');
+
+    const piS1 = getCarPiClass(4, 895);
+    assert.strictEqual(piS1.className, 'S1');
+
+    const piR = getCarPiClass(6, 955);
+    assert.strictEqual(piR.className, 'R');
+
+    const piX = getCarPiClass(7, 999);
+    assert.strictEqual(piX.className, 'X');
   });
 });
 

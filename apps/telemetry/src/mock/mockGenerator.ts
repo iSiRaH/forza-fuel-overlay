@@ -1,4 +1,5 @@
 import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import { getCarPiClass } from '../../../../packages/shared/src/utils/carDatabase.js';
 import { FuelTracker } from '../../../../packages/fuel-engine/src/index.js';
 
 export interface MockGeneratorOptions {
@@ -130,6 +131,8 @@ export class MockTelemetryGenerator {
       this.lapNumber++;
     }
 
+    const piInfo = getCarPiClass(this.carClass, this.carPerformanceIndex);
+
     const data: Partial<ForzaTelemetryData> = {
       isRaceOn: this.isRaceOn,
       timestampMS: this.timestampMS,
@@ -161,6 +164,11 @@ export class MockTelemetryGenerator {
       carOrdinal: this.carOrdinal,
       carClass: this.carClass,
       carPerformanceIndex: this.carPerformanceIndex,
+      carName: fuelState.carName,
+      piClassName: piInfo.className,
+      piRating: piInfo.piRating,
+      piBadgeColor: piInfo.badgeColor,
+      piBadgeBg: piInfo.badgeBg,
     };
 
     if (this.onData) {

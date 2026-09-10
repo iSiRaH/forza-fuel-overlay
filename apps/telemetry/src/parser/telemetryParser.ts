@@ -1,4 +1,5 @@
 import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import { getCarPiClass } from '../../../../packages/shared/src/utils/carDatabase.js';
 import { FuelTracker } from '../../../../packages/fuel-engine/src/index.js';
 
 export const globalFuelTracker = new FuelTracker();
@@ -108,6 +109,9 @@ export function parseForzaTelemetryPacket(buffer: Buffer, tracker: FuelTracker =
     fuel: rawFuelRatio,
   });
 
+  // Resolve Forza PI class designation & badge styling
+  const piInfo = getCarPiClass(carClass, carPerformanceIndex);
+
   return {
     isRaceOn,
     timestampMS,
@@ -139,7 +143,10 @@ export function parseForzaTelemetryPacket(buffer: Buffer, tracker: FuelTracker =
     carOrdinal,
     carClass,
     carPerformanceIndex,
+    carName: fuelState.carName,
+    piClassName: piInfo.className,
+    piRating: piInfo.piRating,
+    piBadgeColor: piInfo.badgeColor,
+    piBadgeBg: piInfo.badgeBg,
   };
 }
-
-

@@ -9,12 +9,13 @@ export interface FuelTrackerState {
   engineDisplacementLiters: number;
   fuelRatio: number; // 0.0 to 1.0
   fuelConsumptionRate: number; // L / 100km
+  carName?: string | undefined;
 }
 
 export class FuelTracker {
   private specs: CarFuelSpecs;
-  private currentCarOrdinal?: number;
-  private currentCarClass?: number;
+  private currentCarOrdinal?: number | undefined;
+  private currentCarClass?: number | undefined;
   private fuelSpentLiters = 0;
   private currentFuelLiters = 60;
   private lastTimestampMS: number | null = null;
@@ -99,6 +100,7 @@ export class FuelTracker {
       engineDisplacementLiters: this.specs.engineDisplacementLiters,
       fuelRatio: parseFloat(fuelRatio.toFixed(4)),
       fuelConsumptionRate: calculation.consumptionLPer100Km,
+      carName: this.specs.carName,
     };
   }
 
@@ -117,6 +119,7 @@ export class FuelTracker {
       engineDisplacementLiters: this.specs.engineDisplacementLiters,
       fuelRatio: targetRatio,
       fuelConsumptionRate: 0,
+      carName: this.specs.carName,
     };
   }
 

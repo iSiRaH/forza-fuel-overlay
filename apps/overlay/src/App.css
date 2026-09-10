@@ -43,10 +43,42 @@
   -webkit-text-fill-color: transparent;
 }
 
+.app-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.forza-pi-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.forza-pi-badge .pi-letter {
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.25);
+  text-transform: uppercase;
+}
+
+.forza-pi-badge .pi-number {
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+}
+
 .subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-size: 11px;
+  color: var(--accent-cyan);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
 }

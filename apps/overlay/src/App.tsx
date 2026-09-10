@@ -26,6 +26,12 @@ export function App() {
     fuelConsumptionRate,
     isFuelLow,
     isFuelCritical,
+    carName,
+    piClassName,
+    piRating,
+    piBadgeColor,
+    piBadgeBg,
+    carOrdinal,
   } = useTelemetry();
 
   return (
@@ -42,8 +48,18 @@ export function App() {
         <div className="brand">
           <span className="logo-icon">🏎️</span>
           <div>
-            <h1 className="app-title">FORZA FUEL OVERLAY</h1>
-            <span className="subtitle">Real-Time Racing Telemetry</span>
+            <div className="app-title-row">
+              <h1 className="app-title">FORZA FUEL OVERLAY</h1>
+              <div
+                className="forza-pi-badge"
+                style={{ background: piBadgeBg, color: piBadgeColor }}
+                title={`Car Class: ${piClassName} ${piRating}`}
+              >
+                <span className="pi-letter">{piClassName}</span>
+                <span className="pi-number">{piRating}</span>
+              </div>
+            </div>
+            <span className="subtitle">{carName}</span>
           </div>
         </div>
 
@@ -132,7 +148,7 @@ export function App() {
 
       {/* Footer Info */}
       <footer className="overlay-footer">
-        <span>Car ID: {telemetry?.carOrdinal ?? '---'} | Position: P{telemetry?.racePosition ?? 1}</span>
+        <span>Car: <strong>{carName}</strong> (ID: {carOrdinal || '---'}) | Position: P{telemetry?.racePosition ?? 1}</span>
         <span>Game Status: {telemetry?.isRaceOn ? '🟢 RACING' : '🟡 PAUSED'}</span>
       </footer>
     </div>

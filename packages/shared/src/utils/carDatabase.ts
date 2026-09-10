@@ -111,40 +111,49 @@ export function getCarFuelSpecs(
   // Base estimations derived from car class
   let baseTankLiters = 60;
   let baseDisplacementLiters = 3.0;
+  let classLabel = 'Supercar Spec';
 
   if (carClass !== undefined) {
     switch (carClass) {
       case 0: // D Class
         baseTankLiters = 45;
         baseDisplacementLiters = 1.6;
+        classLabel = 'D-Class Street Spec';
         break;
       case 1: // C Class
         baseTankLiters = 52;
         baseDisplacementLiters = 2.0;
+        classLabel = 'C-Class Sport Tuned';
         break;
       case 2: // B Class
         baseTankLiters = 58;
         baseDisplacementLiters = 2.5;
+        classLabel = 'B-Class Performance Sport';
         break;
       case 3: // A Class
         baseTankLiters = 65;
         baseDisplacementLiters = 3.5;
+        classLabel = 'A-Class Super Sport';
         break;
       case 4: // S1 Class
         baseTankLiters = 75;
         baseDisplacementLiters = 4.2;
+        classLabel = 'S1-Class Supercar';
         break;
       case 5: // S2 Class
         baseTankLiters = 88;
         baseDisplacementLiters = 5.2;
+        classLabel = 'S2-Class Hypercar';
         break;
       case 6: // R Class
         baseTankLiters = 100;
         baseDisplacementLiters = 5.5;
+        classLabel = 'R-Class Motorsport Spec';
         break;
       case 7: // X Class
         baseTankLiters = 110;
         baseDisplacementLiters = 6.0;
+        classLabel = 'X-Class Unlimited Prototype';
         break;
     }
   }
@@ -179,7 +188,7 @@ export function getCarFuelSpecs(
   const engineDisplacementLiters = parseFloat(Math.max(1.2, Math.min(8.5, baseDisplacementLiters + carUniqueDispOffset)).toFixed(1));
 
   const carName = carOrdinal !== undefined && carOrdinal > 0
-    ? `Forza Car #${carOrdinal}`
+    ? `${classLabel} (ID #${carOrdinal})`
     : 'Unknown Forza Car';
 
   return {

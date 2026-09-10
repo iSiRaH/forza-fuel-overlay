@@ -31,16 +31,18 @@ export class FuelTracker {
    * Updates car specs if car ordinal or class changes.
    */
   public updateCarSpecs(carOrdinal?: number, carClass?: number, powerHp?: number): CarFuelSpecs {
-    if (
-      carOrdinal !== this.currentCarOrdinal ||
-      carClass !== this.currentCarClass
-    ) {
+    // Ignore invalid/undefined car Ordinal resets during telemetry stream
+    if (carOrdinal !== undefined && carOrdinal > 0 && carOrdinal !== this.currentCarOrdinal) {
+      const isInitialSet = this.currentCarOrdinal === undefined;
       this.currentCarOrdinal = carOrdinal;
       this.currentCarClass = carClass;
       this.specs = getCarFuelSpecs(carOrdinal, carClass, powerHp);
-      // Reset fuel to full for new car
-      this.currentFuelLiters = this.specs.maxFuelCapacityLiters;
-      this.fuelSpentLiters = 0;
+
+      // Only reset fuel state if changing mid-session from an existing car to a new car
+      if (!isInitialSet) {
+        this.currentFuelLiters = this.specs.maxFuelCapacityLiters;
+        this.fuelSpentLiters = 0;
+      }
     }
     return this.specs;
   }
@@ -76,16 +78,14 @@ export class FuelTracker {
       dtSeconds,
     });
 
-    // If game packet has explicit telemetry fuel ratio (0.0 - 1.0), use it to adjust current fuel
-    if (data.fuel !== undefined && !isNaN(data.fuel) && data.fuel >= 0 && data.fuel <= 1.0) {
-      const telemetryFuelLiters = data.fuel * this.specs.maxFuelCapacityLiters;
+    // Accumulate spent fuel step by step
+    this.fuelSpentLiters += calculation.fuelSpentStepLiters;
 
-      // Track spent fuel based on difference or calculated step
-      this.fuelSpentLiters += calculation.fuelSpentStepLiters;
-      this.currentFuelLiters = Math.max(0, Math.min(this.specs.maxFuelCapacityLiters, telemetryFuelLiters));
+    // If game packet reports active in-game fuel depletion (fuel < 0.999), use game's exact ratio.
+    // Otherwise, dynamically deplete fuel using physics-based step calculation.
+    if (data.fuel !== undefined && !isNaN(data.fuel) && data.fuel >= 0 && data.fuel < 0.999) {
+      this.currentFuelLiters = Math.max(0, Math.min(this.specs.maxFuelCapacityLiters, data.fuel * this.specs.maxFuelCapacityLiters));
     } else {
-      // Calculate depleted fuel step by step
-      this.fuelSpentLiters += calculation.fuelSpentStepLiters;
       this.currentFuelLiters = Math.max(0, this.currentFuelLiters - calculation.fuelSpentStepLiters);
     }
 

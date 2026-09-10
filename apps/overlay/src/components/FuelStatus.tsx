@@ -19,18 +19,15 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
   brake,
   engineDisplacementLiters,
 }) => {
-  // Support 0-255 (raw uint8), 0-100 (percentage), or 0-1 (float fraction)
-  const accelPct = accel > 100
-    ? Math.min(100, Math.round((accel / 255) * 100))
-    : accel <= 1 && accel > 0
-      ? Math.min(100, Math.round(accel * 100))
-      : Math.min(100, Math.round(accel));
+  // Convert 0-255 uint8 or 0-1 float fraction to clean 0-100%
+  const normalizeInputPct = (val: number): number => {
+    if (!val || val <= 0) return 0;
+    if (val <= 1) return Math.min(100, Math.round(val * 100));
+    return Math.min(100, Math.round((val / 255) * 100));
+  };
 
-  const brakePct = brake > 100
-    ? Math.min(100, Math.round((brake / 255) * 100))
-    : brake <= 1 && brake > 0
-      ? Math.min(100, Math.round(brake * 100))
-      : Math.min(100, Math.round(brake));
+  const accelPct = normalizeInputPct(accel);
+  const brakePct = normalizeInputPct(brake);
 
   const displacementText = engineDisplacementLiters ? `${engineDisplacementLiters.toFixed(1)} L` : '3.0 L';
 

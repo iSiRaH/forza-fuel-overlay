@@ -58,11 +58,21 @@ export function parseForzaTelemetryPacket(buffer: Buffer, tracker: FuelTracker =
   const currentRaceTime = buffer.length >= 300 ? buffer.readFloatLE(296) : 0;
   const lapNumber = buffer.length >= 302 ? buffer.readUInt16LE(300) : 0;
   const racePosition = buffer.length >= 303 ? buffer.readUInt8(302) : 0;
-  const accel = buffer.length >= 304 ? buffer.readUInt8(303) : 0;
-  const brake = buffer.length >= 305 ? buffer.readUInt8(304) : 0;
+  let accel = buffer.length >= 304 ? buffer.readUInt8(303) : 0;
+  let brake = buffer.length >= 305 ? buffer.readUInt8(304) : 0;
   const clutch = buffer.length >= 306 ? buffer.readUInt8(305) : 0;
   const handBrake = buffer.length >= 307 ? buffer.readUInt8(306) : 0;
   const steer = buffer.length >= 309 ? buffer.readInt8(308) : 0;
+
+  // Sled mode fallback for throttle and braking inputs (232-byte packet format)
+  if (buffer.length < 304 && buffer.length >= 32) {
+    const accelZ = buffer.readFloatLE(28); // Longitudinal acceleration G-force vector (m/s²)
+    if (accelZ > 0.2) {
+      accel = Math.min(255, Math.round((accelZ / 7.0) * 255));
+    } else if (accelZ < -0.5) {
+      brake = Math.min(255, Math.round((Math.abs(accelZ) / 10.0) * 255));
+    }
+  }
 
   // Convert Forza raw gear encoding (0=R, 1=N, 2=1st, 3=2nd...) to standard gear numbers
   let gear = 0;
@@ -72,26 +82,25 @@ export function parseForzaTelemetryPacket(buffer: Buffer, tracker: FuelTracker =
       gear = -1; // Reverse
     } else if (rawGear === 1) {
       gear = 0; // Neutral
+    } else if (rawGear === 255 || rawGear === 15) {
+      gear = -1; // Alternative Reverse encoding in some telemetry variants
     } else {
       gear = rawGear - 1; // 1st, 2nd, 3rd, etc.
     }
-  } else if (buffer.length >= 116 && currentEngineRpm > 500) {
-    // Sled mode fallback: calculate drive ratio from Engine RPM vs Wheel Rotation Speed (rad/s)
-    const wheelFL = Math.abs(buffer.readFloatLE(100));
-    const wheelFR = Math.abs(buffer.readFloatLE(104));
-    const wheelRL = Math.abs(buffer.readFloatLE(108));
-    const wheelRR = Math.abs(buffer.readFloatLE(112));
-    const avgWheelRadSec = (wheelFL + wheelFR + wheelRL + wheelRR) / 4;
-    const wheelRpm = avgWheelRadSec * 9.5493;
-
-    if (wheelRpm > 10) {
-      const driveRatio = currentEngineRpm / wheelRpm;
-      if (driveRatio > 10.0) gear = 1;
-      else if (driveRatio > 6.5) gear = 2;
-      else if (driveRatio > 4.5) gear = 3;
-      else if (driveRatio > 3.2) gear = 4;
-      else if (driveRatio > 2.3) gear = 5;
-      else gear = 6;
+  } else if (buffer.length >= 232 && currentEngineRpm > 500) {
+    // Sled mode fallback (232-byte packet): calculate gear from vehicle speed and engine RPM
+    const speedKmH = speed * 3.6;
+    if (speedKmH > 2) {
+      const ratio = currentEngineRpm / speedKmH;
+      if (ratio > 75) gear = 1;
+      else if (ratio > 48) gear = 2;
+      else if (ratio > 34) gear = 3;
+      else if (ratio > 24) gear = 4;
+      else if (ratio > 17) gear = 5;
+      else if (ratio > 12) gear = 6;
+      else gear = 7;
+    } else {
+      gear = 1; // 1st gear when ready to launch from standstill
     }
   }
 

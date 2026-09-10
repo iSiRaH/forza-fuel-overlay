@@ -19,6 +19,7 @@ function createWindow() {
     resizable: true,
     hasShadow: false,
     skipTaskbar: false,
+    focusable: false, // Ensures game retains 100% keyboard and controller focus for gear shifting
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -27,6 +28,9 @@ function createWindow() {
 
   // Set window level to stay on top of borderless windowed games
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
+
+  // Allow all mouse clicks to pass through to the game behind the overlay
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error(`[Electron] Failed to load page: ${errorDescription} (${errorCode})`);

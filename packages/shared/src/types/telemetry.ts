@@ -14,6 +14,11 @@ export interface ForzaTelemetryData {
   handBrake: number;
   steer: number;
   fuel: number; // fuel remaining ratio (0.0 to 1.0)
+  maxFuelCapacityLiters?: number; // full fuel tank capacity based on car model
+  currentFuelLiters?: number; // current fuel in liters
+  fuelSpentLiters?: number; // fuel spent so far in liters
+  engineDisplacementLiters?: number; // engine displacement capacity in liters
+  fuelConsumptionRate?: number; // consumption rate in L/100km or L/h
   distanceTraveled: number;
   bestLap: number;
   lastLap: number;

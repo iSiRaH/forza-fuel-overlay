@@ -1,10 +1,13 @@
 import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import { FuelTracker } from '../../../../packages/fuel-engine/src/index.js';
+
+export const globalFuelTracker = new FuelTracker();
 
 /**
  * Parses a raw UDP Buffer received from Forza Motorsport / Forza Horizon 6.
  * Supports both Sled (232+ bytes) and Dash (311+ / 323+ / 331+ bytes) packet formats.
  */
-export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetryData> {
+export function parseForzaTelemetryPacket(buffer: Buffer, tracker: FuelTracker = globalFuelTracker): Partial<ForzaTelemetryData> {
   if (!buffer || buffer.length < 232) {
     throw new Error(`Invalid packet size: expected at least 232 bytes, got ${buffer ? buffer.length : 0}`);
   }
@@ -46,7 +49,7 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
   const torque = Math.max(0, rawTorque);
 
   // Dash telemetry fields (offsets 276..308)
-  const fuel = buffer.length >= 280 ? buffer.readFloatLE(276) : 1.0;
+  const rawFuelRatio = buffer.length >= 280 ? buffer.readFloatLE(276) : 1.0;
   const distanceTraveled = buffer.length >= 284 ? buffer.readFloatLE(280) : 0;
   const bestLap = buffer.length >= 288 ? buffer.readFloatLE(284) : 0;
   const lastLap = buffer.length >= 292 ? buffer.readFloatLE(288) : 0;
@@ -91,6 +94,20 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
     }
   }
 
+  // Calculate advanced fuel metrics with FuelTracker
+  const fuelState = tracker.processTelemetry({
+    timestampMS,
+    carOrdinal,
+    carClass,
+    power,
+    speed,
+    gear,
+    currentEngineRpm,
+    engineMaxRpm,
+    accel,
+    fuel: rawFuelRatio,
+  });
+
   return {
     isRaceOn,
     timestampMS,
@@ -100,7 +117,12 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
     speed,
     power,
     torque,
-    fuel,
+    fuel: fuelState.fuelRatio,
+    maxFuelCapacityLiters: fuelState.maxFuelCapacityLiters,
+    currentFuelLiters: fuelState.currentFuelLiters,
+    fuelSpentLiters: fuelState.fuelSpentLiters,
+    engineDisplacementLiters: fuelState.engineDisplacementLiters,
+    fuelConsumptionRate: fuelState.fuelConsumptionRate,
     distanceTraveled,
     bestLap,
     lastLap,
@@ -119,4 +141,5 @@ export function parseForzaTelemetryPacket(buffer: Buffer): Partial<ForzaTelemetr
     carPerformanceIndex,
   };
 }
+
 

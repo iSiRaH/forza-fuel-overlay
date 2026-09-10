@@ -1,4 +1,5 @@
 import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import { FuelTracker } from '../../../../packages/fuel-engine/src/index.js';
 
 export interface MockGeneratorOptions {
   intervalMs?: number;
@@ -9,6 +10,7 @@ export class MockTelemetryGenerator {
   private timer: NodeJS.Timeout | null = null;
   private intervalMs: number;
   private onData?: (data: Partial<ForzaTelemetryData>) => void;
+  private fuelTracker = new FuelTracker(1024, 4, 500);
 
   // Simulation state
   private isRaceOn = true;
@@ -23,7 +25,6 @@ export class MockTelemetryGenerator {
   private clutch = 0;
   private handBrake = 0;
   private steer = 0;
-  private fuel = 0.95; // 95% remaining
   private distanceTraveled = 0;
   private bestLap = 88.42; // seconds
   private lastLap = 89.15;
@@ -43,6 +44,11 @@ export class MockTelemetryGenerator {
     if (options.onData) {
       this.onData = options.onData;
     }
+  }
+
+  public refill(): void {
+    console.log('⛽ Refilling fuel in Mock Telemetry Generator...');
+    this.fuelTracker.refill(1.0);
   }
 
   public start(): void {
@@ -100,9 +106,19 @@ export class MockTelemetryGenerator {
     // Distance traveled
     this.distanceTraveled += this.speed * dt;
 
-    // Fuel depletion simulation (approx 0.0001 per tick during heavy load)
-    const fuelRate = 0.00003 + (this.currentEngineRpm / 8500) * 0.00005;
-    this.fuel = Math.max(0.01, this.fuel - fuelRate);
+    // Calculate fuel consumption using FuelTracker
+    const power = Math.round(150 + (this.currentEngineRpm / 8500) * 350);
+    const fuelState = this.fuelTracker.processTelemetry({
+      timestampMS: this.timestampMS,
+      carOrdinal: this.carOrdinal,
+      carClass: this.carClass,
+      power,
+      speed: this.speed,
+      gear: this.gear,
+      currentEngineRpm: this.currentEngineRpm,
+      engineMaxRpm: this.engineMaxRpm,
+      accel: this.accel,
+    });
 
     // Lap completion simulation (~85 sec lap)
     if (this.currentLap >= 85) {
@@ -121,7 +137,7 @@ export class MockTelemetryGenerator {
       engineIdleRpm: this.engineIdleRpm,
       currentEngineRpm: Math.round(this.currentEngineRpm),
       speed: parseFloat(this.speed.toFixed(2)),
-      power: Math.round(150 + (this.currentEngineRpm / 8500) * 350),
+      power,
       torque: Math.round(350 + (this.currentEngineRpm / 8500) * 150),
       gear: this.gear,
       accel: this.accel,
@@ -129,7 +145,12 @@ export class MockTelemetryGenerator {
       clutch: this.clutch,
       handBrake: this.handBrake,
       steer: this.steer,
-      fuel: parseFloat(this.fuel.toFixed(4)),
+      fuel: fuelState.fuelRatio,
+      maxFuelCapacityLiters: fuelState.maxFuelCapacityLiters,
+      currentFuelLiters: fuelState.currentFuelLiters,
+      fuelSpentLiters: fuelState.fuelSpentLiters,
+      engineDisplacementLiters: fuelState.engineDisplacementLiters,
+      fuelConsumptionRate: fuelState.fuelConsumptionRate,
       distanceTraveled: Math.round(this.distanceTraveled),
       bestLap: parseFloat(this.bestLap.toFixed(2)),
       lastLap: parseFloat(this.lastLap.toFixed(2)),
@@ -155,3 +176,4 @@ export class MockTelemetryGenerator {
     }
   }
 }
+

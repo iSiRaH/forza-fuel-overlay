@@ -1,6 +1,7 @@
 import { ForzaUDPReceiver } from './udp/receiver.js';
 import { TelemetryWebSocketServer } from './websocket/websocketServer.js';
 import { MockTelemetryGenerator } from './mock/mockGenerator.js';
+import { globalFuelTracker } from './parser/telemetryParser.js';
 
 const PORT = parseInt(process.env.FORZA_UDP_PORT || '5300', 10);
 const HOST = process.env.FORZA_UDP_HOST || '0.0.0.0';
@@ -12,12 +13,24 @@ console.log(' 🏎️ FORZA FUEL OVERLAY - REAL-TIME TELEMETRY LOGGER');
 console.log(` Mode: ${isMockMode ? 'MOCK / SIMULATION 🧪' : 'LIVE UDP RECEIVER 📡'}`);
 console.log('====================================================');
 
-// 1. Initialize WebSocket server for streaming telemetry to overlay UI
-const wsServer = new TelemetryWebSocketServer({ port: WS_PORT });
-wsServer.start();
-
 let receiver: ForzaUDPReceiver | null = null;
 let mockGenerator: MockTelemetryGenerator | null = null;
+
+// 1. Initialize WebSocket server for streaming telemetry to overlay UI
+const wsServer = new TelemetryWebSocketServer({
+  port: WS_PORT,
+  onControlMessage: (msg) => {
+    if (msg.type === 'REFILL_FUEL') {
+      console.log('⛽ Refill fuel request received from client UI!');
+      globalFuelTracker.refill(1.0);
+      if (mockGenerator) {
+        mockGenerator.refill();
+      }
+    }
+  },
+});
+wsServer.start();
+
 
 if (isMockMode) {
   // 2a. Start mock generator for test data stream

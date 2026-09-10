@@ -12,12 +12,18 @@ export function App() {
     isConnected,
     speedUnit,
     toggleSpeedUnit,
+    refillFuel,
     currentSpeed,
     rpmPercent,
     currentRpm,
     maxRpm,
     isShiftWarning,
     fuelPct,
+    maxFuelCapacityLiters,
+    currentFuelLiters,
+    fuelSpentLiters,
+    engineDisplacementLiters,
+    fuelConsumptionRate,
     isFuelLow,
     isFuelCritical,
   } = useTelemetry();
@@ -91,8 +97,11 @@ export function App() {
       <main className="dashboard-grid">
         <FuelGauge
           fuelPct={fuelPct}
+          currentFuelLiters={currentFuelLiters}
+          maxFuelCapacityLiters={maxFuelCapacityLiters}
           isFuelLow={isFuelLow}
           isFuelCritical={isFuelCritical}
+          onRefill={refillFuel}
         />
 
         <RemainingLaps
@@ -105,6 +114,8 @@ export function App() {
           currentLapTime={telemetry?.currentLap ?? 0}
           bestLapTime={telemetry?.bestLap ?? 0}
           distanceTraveled={telemetry?.distanceTraveled ?? 0}
+          fuelSpentLiters={fuelSpentLiters}
+          fuelConsumptionRate={fuelConsumptionRate}
         />
 
         <FuelStatus
@@ -115,6 +126,7 @@ export function App() {
           steer={telemetry?.steer ?? 0}
           accel={telemetry?.accel ?? 0}
           brake={telemetry?.brake ?? 0}
+          engineDisplacementLiters={engineDisplacementLiters}
         />
       </main>
 

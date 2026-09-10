@@ -1,17 +1,26 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import type { ForzaTelemetryData, TelemetryControlMessage } from '../../../../packages/shared/src/index.js';
+
+
 
 export interface WebSocketServerOptions {
   port?: number;
+  onControlMessage?: (message: TelemetryControlMessage) => void;
 }
 
 export class TelemetryWebSocketServer {
   private wss: WebSocketServer | null = null;
   private port: number;
   private clients: Set<WebSocket> = new Set();
+  private onControlMessage?: (message: TelemetryControlMessage) => void;
 
   constructor(options: WebSocketServerOptions = {}) {
     this.port = options.port || parseInt(process.env.FORZA_WS_PORT || '8080', 10);
+    this.onControlMessage = options.onControlMessage;
+  }
+
+  public setControlMessageHandler(handler: (message: TelemetryControlMessage) => void): void {
+    this.onControlMessage = handler;
   }
 
   public start(): void {
@@ -23,6 +32,18 @@ export class TelemetryWebSocketServer {
       this.clients.add(ws);
       const clientIp = req.socket.remoteAddress || 'unknown';
       console.log(`🔌 Overlay client connected from ${clientIp} (Total clients: ${this.clients.size})`);
+
+      ws.on('message', (rawMsg) => {
+        try {
+          const parsed = JSON.parse(rawMsg.toString()) as TelemetryControlMessage;
+          if (parsed && parsed.type && this.onControlMessage) {
+            console.log(`📥 Received control command: ${parsed.type}`);
+            this.onControlMessage(parsed);
+          }
+        } catch (e) {
+          // Ignore non-JSON messages
+        }
+      });
 
       ws.on('close', () => {
         this.clients.delete(ws);

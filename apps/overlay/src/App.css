@@ -241,6 +241,56 @@
   letter-spacing: 0.5px;
 }
 
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fuel-capacity-badge {
+  background: rgba(0, 242, 254, 0.15);
+  color: #00f2fe;
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refill-btn {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.refill-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(0, 198, 255, 0.6);
+  background: linear-gradient(135deg, #00d2ff, #0082ff);
+}
+
+.refill-btn:active {
+  transform: translateY(1px);
+}
+
 .fuel-pct-text {
   font-family: var(--font-display);
   font-size: 18px;
@@ -255,6 +305,12 @@
 .fuel-pct-text.critical {
   color: var(--accent-danger);
 }
+
+.stat-value.highlight-fuel {
+  color: #ffaa00;
+  font-weight: 700;
+}
+
 
 .gauge-bar-track {
   height: 12px;

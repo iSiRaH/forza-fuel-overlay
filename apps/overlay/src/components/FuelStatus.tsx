@@ -8,6 +8,7 @@ interface FuelStatusProps {
   steer: number;
   accel: number;
   brake: number;
+  engineDisplacementLiters?: number;
 }
 
 export const FuelStatus: React.FC<FuelStatusProps> = ({
@@ -16,6 +17,7 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
   gear,
   accel,
   brake,
+  engineDisplacementLiters,
 }) => {
   // Support 0-255 (raw uint8), 0-100 (percentage), or 0-1 (float fraction)
   const accelPct = accel > 100
@@ -29,6 +31,8 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
     : brake <= 1 && brake > 0
       ? Math.min(100, Math.round(brake * 100))
       : Math.min(100, Math.round(brake));
+
+  const displacementText = engineDisplacementLiters ? `${engineDisplacementLiters.toFixed(1)} L` : '3.0 L';
 
   return (
     <div className="telemetry-card">
@@ -55,6 +59,10 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
 
       <div className="stats-grid" style={{ marginTop: '12px' }}>
         <div className="stat-box">
+          <span className="stat-label">DISPLACEMENT</span>
+          <span className="stat-value highlight">{displacementText}</span>
+        </div>
+        <div className="stat-box">
           <span className="stat-label">POWER</span>
           <span className="stat-value">{Math.round(power)} HP</span>
         </div>
@@ -66,3 +74,4 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
     </div>
   );
 };
+

@@ -22,7 +22,7 @@
 }
 
 body {
-  background-color: var(--bg-dark);
+  background-color: transparent;
   color: var(--text-main);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev\" \"pnpm --filter overlay dev\"",
     "dev:mock": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev:mock\" \"pnpm --filter overlay dev\"",
+    "dev:app": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev\" \"pnpm --filter overlay dev:electron\"",
+    "dev:app:mock": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev:mock\" \"pnpm --filter overlay dev:electron\"",
     "start": "pnpm run dev",
     "test": "pnpm --filter telemetry test"
   },

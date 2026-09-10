@@ -9,7 +9,7 @@ export interface UseTelemetryOptions {
 }
 
 export function useTelemetry(options: UseTelemetryOptions = {}) {
-  const wsUrl = options.wsUrl || 'ws://localhost:8080';
+  const wsUrl = options.wsUrl || (import.meta.env.VITE_WS_URL as string | undefined) || 'ws://localhost:8080';
   const [telemetry, setTelemetry] = useState<Partial<ForzaTelemetryData> | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>(options.defaultUnit || 'kmh');

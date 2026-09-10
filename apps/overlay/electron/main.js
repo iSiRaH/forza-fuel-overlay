@@ -28,17 +28,28 @@ function createWindow() {
   // Set window level to stay on top of borderless windowed games
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
 
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error(`[Electron] Failed to load page: ${errorDescription} (${errorCode})`);
+  });
+
+  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development' || Boolean(process.env.VITE_DEV_SERVER_URL);
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
-  if (process.env.NODE_ENV === 'development' || process.env.VITE_DEV_SERVER_URL) {
+  if (isDev) {
+    console.log(`[Electron] Loading dev URL: ${devUrl}`);
     mainWindow.loadURL(devUrl);
   } else {
+    console.log('[Electron] Loading production file');
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
 }
 
 app.whenReady().then(createWindow);

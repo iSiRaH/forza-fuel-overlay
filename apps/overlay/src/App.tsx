@@ -1,4 +1,5 @@
 import { useTelemetry } from './hooks/useTelemetry';
+import { formatGear } from '../../../packages/shared/src/utils/gear.js';
 import { FuelGauge } from './components/FuelGauge';
 import { FuelConsumption } from './components/FuelConsumption';
 import { FuelStatus } from './components/FuelStatus';
@@ -84,9 +85,7 @@ export function App() {
       <section className="speedometer-hero">
         <div className="gear-display">
           <span className="gear-label">GEAR</span>
-          <span className="gear-value">
-            {telemetry?.gear === undefined || telemetry.gear === 0 ? 'N' : telemetry.gear === -1 ? 'R' : telemetry.gear}
-          </span>
+          <span className="gear-value">{formatGear(telemetry?.gear)}</span>
         </div>
 
         <div className="speed-readout">
@@ -138,7 +137,7 @@ export function App() {
           fuelPct={fuelPct}
           power={telemetry?.power ?? 0}
           torque={telemetry?.torque ?? 0}
-          gear={telemetry?.gear ?? 0}
+          gear={telemetry?.gear}
           steer={telemetry?.steer ?? 0}
           accel={telemetry?.accel ?? 0}
           brake={telemetry?.brake ?? 0}

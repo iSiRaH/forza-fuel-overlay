@@ -1,4 +1,5 @@
 import type { ForzaTelemetryData } from '../../../../packages/shared/src/types/telemetry.js';
+import { formatGear } from '../../../../packages/shared/src/utils/gear.js';
 
 export interface LoggerOptions {
   prefix?: string;
@@ -19,7 +20,7 @@ export function logTelemetryData(
   const speedKmH = data.speed !== undefined ? (data.speed * 3.6).toFixed(1) : '0.0';
   const rpm = data.currentEngineRpm !== undefined ? Math.round(data.currentEngineRpm) : 0;
   const maxRpm = data.engineMaxRpm !== undefined ? Math.round(data.engineMaxRpm) : 0;
-  const gear = data.gear !== undefined ? data.gear : 0;
+  const gearFormatted = formatGear(data.gear);
   const fuelPct = data.fuel !== undefined ? (data.fuel * 100).toFixed(1) : '0.0';
   const lap = data.lapNumber !== undefined ? data.lapNumber : 0;
   const raceTime = data.currentRaceTime !== undefined ? data.currentRaceTime.toFixed(2) : '0.00';
@@ -27,7 +28,8 @@ export function logTelemetryData(
   let outputMessage: string;
 
   if (options.formatted) {
-    outputMessage = `${prefix}Lap: ${lap} | Time: ${raceTime}s | Speed: ${speedKmH} km/h | RPM: ${rpm}/${maxRpm} | Gear: ${gear === 0 ? 'N' : gear === -1 ? 'R' : gear} | Fuel: ${fuelPct}%`;
+    outputMessage = `${prefix}Lap: ${lap} | Time: ${raceTime}s | Speed: ${speedKmH} km/h | RPM: ${rpm}/${maxRpm} | Gear: ${gearFormatted} | Fuel: ${fuelPct}%`;
+
   } else {
     outputMessage = `${prefix}${JSON.stringify({
       isRaceOn: data.isRaceOn ?? false,
@@ -36,7 +38,7 @@ export function logTelemetryData(
       currentRaceTime: data.currentRaceTime ?? 0,
       speedKmH: parseFloat(speedKmH),
       currentEngineRpm: rpm,
-      gear,
+      gear: data.gear ?? 0,
       fuelPct: parseFloat(fuelPct),
       accel: data.accel ?? 0,
       brake: data.brake ?? 0,

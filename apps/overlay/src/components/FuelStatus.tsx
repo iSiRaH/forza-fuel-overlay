@@ -1,10 +1,11 @@
 import React from 'react';
+import { formatGear } from '../../../../packages/shared/src/utils/gear.js';
 
 interface FuelStatusProps {
   fuelPct: number;
   power: number;
   torque: number;
-  gear: number;
+  gear?: number | undefined;
   steer: number;
   accel: number;
   brake: number;
@@ -35,8 +36,9 @@ export const FuelStatus: React.FC<FuelStatusProps> = ({
     <div className="telemetry-card">
       <div className="card-header">
         <span className="card-title">⚙️ ENGINE & INPUTS</span>
-        <span className="gear-badge">GEAR {gear === 0 ? 'N' : gear === -1 ? 'R' : gear}</span>
+        <span className="gear-badge">GEAR {formatGear(gear)}</span>
       </div>
+
 
       <div className="inputs-row">
         <div className="input-bar-group">

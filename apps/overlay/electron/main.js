@@ -10,9 +10,9 @@ let mainWindow = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 760,
-    height: 520,
-    x: 100,
-    y: 100,
+    height: 640,
+    x: 0,
+    y: 0,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -25,6 +25,9 @@ function createWindow() {
       contextIsolation: true,
     },
   });
+
+  // Make window slightly transparent overall for better game visibility
+  mainWindow.setOpacity(0.92);
 
   // Set window level to stay on top of borderless windowed games
   mainWindow.setAlwaysOnTop(true, 'screen-saver');

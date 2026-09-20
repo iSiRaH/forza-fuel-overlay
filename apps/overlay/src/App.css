@@ -1,17 +1,26 @@
 .overlay-container {
   width: 720px;
   max-width: 95vw;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--panel-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   position: relative;
+}
+
+/* Hide scrollbar but keep scrollable */
+.overlay-container::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 
 /* Header */
@@ -19,8 +28,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
   -webkit-app-region: drag;
   cursor: move;
 }
@@ -145,10 +154,10 @@
 
 /* Speedometer Hero */
 .speedometer-hero {
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 12px;
-  padding: 16px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,7 +197,7 @@
 
 .speed-number {
   font-family: var(--font-display);
-  font-size: 64px;
+  font-size: 52px;
   font-weight: 900;
   line-height: 1;
   color: #ffffff;
@@ -248,17 +257,17 @@
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  gap: 10px;
 }
 
 .telemetry-card, .fuel-gauge-card {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 14px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .card-header {
@@ -527,9 +536,9 @@
 .overlay-footer {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 6px;
   font-family: var(--font-display);
 }

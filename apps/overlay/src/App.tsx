@@ -5,6 +5,7 @@ import { FuelConsumption } from './components/FuelConsumption';
 import { FuelStatus } from './components/FuelStatus';
 import { RemainingLaps } from './components/RemainingLaps';
 import { WarningIndicator } from './components/WarningIndicator';
+import { FuelEmptyModal } from './components/FuelEmptyModal';
 import './App.css';
 
 export function App() {
@@ -33,10 +34,22 @@ export function App() {
     piBadgeColor,
     piBadgeBg,
     carOrdinal,
+    increaseTankCapacity,
+    decreaseTankCapacity,
+    isFuelTaskPaused,
+    togglePauseFuelTask,
+    showEmptyModal,
+    dismissEmptyModal,
   } = useTelemetry();
 
   return (
     <div className="overlay-container">
+      {/* Zero Fuel Empty Alert Popup */}
+      <FuelEmptyModal
+        isOpen={showEmptyModal}
+        onClose={dismissEmptyModal}
+      />
+
       {/* Shift & Fuel Warning Banners */}
       <WarningIndicator
         isShiftWarning={isShiftWarning}
@@ -65,6 +78,15 @@ export function App() {
         </div>
 
         <div className="controls">
+          <button
+            type="button"
+            className={`pause-toggle-btn ${isFuelTaskPaused ? 'paused' : ''}`}
+            onClick={togglePauseFuelTask}
+            title={isFuelTaskPaused ? 'Resume fuel tracking task' : 'Pause fuel tracking task'}
+          >
+            {isFuelTaskPaused ? '▶️ RESUME FUEL' : '⏸️ PAUSE FUEL'}
+          </button>
+
           <button
             type="button"
             className="unit-toggle-btn"
@@ -117,6 +139,8 @@ export function App() {
           isFuelLow={isFuelLow}
           isFuelCritical={isFuelCritical}
           onRefill={refillFuel}
+          onIncreaseTankCapacity={increaseTankCapacity}
+          onDecreaseTankCapacity={decreaseTankCapacity}
         />
 
         <RemainingLaps
@@ -148,7 +172,9 @@ export function App() {
       {/* Footer Info */}
       <footer className="overlay-footer">
         <span>Car: <strong>{carName}</strong> (ID: {carOrdinal || '---'}) | Position: P{telemetry?.racePosition ?? 1}</span>
-        <span>Game Status: {telemetry?.isRaceOn ? '🟢 RACING' : '🟡 PAUSED'}</span>
+        <span>
+          Game Status: {isFuelTaskPaused ? '⏸️ FUEL PAUSED' : telemetry?.isRaceOn ? '🟢 RACING' : '🟡 GAME PAUSED'}
+        </span>
       </footer>
     </div>
   );

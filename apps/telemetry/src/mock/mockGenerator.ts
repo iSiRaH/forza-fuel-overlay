@@ -52,6 +52,16 @@ export class MockTelemetryGenerator {
     this.fuelTracker.refill(1.0);
   }
 
+  public setTankCapacity(capacityLiters: number): void {
+    console.log(`⛽ Setting tank capacity in Mock Telemetry Generator to ${capacityLiters} L...`);
+    this.fuelTracker.setTankCapacity(capacityLiters);
+  }
+
+  public setPaused(paused: boolean): void {
+    console.log(`⏸️ Setting pause state in Mock Telemetry Generator to ${paused}`);
+    this.fuelTracker.setPaused(paused);
+  }
+
   public start(): void {
     if (this.timer) return;
 

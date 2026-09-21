@@ -26,6 +26,22 @@ const wsServer = new TelemetryWebSocketServer({
       if (mockGenerator) {
         mockGenerator.refill();
       }
+    } else if (msg.type === 'SET_TANK_CAPACITY') {
+      const capacity = Number(msg.payload?.capacityLiters);
+      if (!isNaN(capacity) && capacity > 0) {
+        console.log(`⛽ Setting tank capacity to ${capacity} L...`);
+        globalFuelTracker.setTankCapacity(capacity);
+        if (mockGenerator) {
+          mockGenerator.setTankCapacity(capacity);
+        }
+      }
+    } else if (msg.type === 'SET_PAUSED') {
+      const isPaused = Boolean(msg.payload?.isPaused);
+      console.log(`⏸️ Fuel calculation pause toggled: ${isPaused}`);
+      globalFuelTracker.setPaused(isPaused);
+      if (mockGenerator) {
+        mockGenerator.setPaused(isPaused);
+      }
     }
   },
 });

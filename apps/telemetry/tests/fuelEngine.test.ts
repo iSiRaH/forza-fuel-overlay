@@ -110,4 +110,83 @@ describe('FuelTracker & Refill Option', () => {
     assert.strictEqual(stateAfterRefill.currentFuelLiters, 68);
     assert.strictEqual(stateAfterRefill.fuelSpentLiters, 0);
   });
+
+  it('should support user-configurable fuel tank size in 5 L steps', () => {
+    const tracker = new FuelTracker(1024);
+    
+    // Set custom tank capacity to 55 L
+    const state55 = tracker.setTankCapacity(55);
+    assert.strictEqual(state55.maxFuelCapacityLiters, 55);
+    assert.strictEqual(state55.currentFuelLiters, 55);
+
+    // Increase to 65 L
+    const state65 = tracker.setTankCapacity(65);
+    assert.strictEqual(state65.maxFuelCapacityLiters, 65);
+
+    // Rounding to nearest 5 L step (e.g. 52 L -> 50 L)
+    const stateRounded = tracker.setTankCapacity(52);
+    assert.strictEqual(stateRounded.maxFuelCapacityLiters, 50);
+
+    // Minimum boundary protection (e.g. 0 L -> 5 L min)
+    const stateMin = tracker.setTankCapacity(0);
+    assert.strictEqual(stateMin.maxFuelCapacityLiters, 5);
+  });
+
+  it('should freeze fuel state during pause and rebase telemetry timestamp on resume', () => {
+    const tracker = new FuelTracker(1024);
+    
+    // Initial ticks to consume some fuel
+    for (let i = 0; i < 10; i++) {
+      tracker.processTelemetry({
+        isRaceOn: true,
+        timestampMS: i * 100,
+        carOrdinal: 1024,
+        speed: 40,
+        gear: 3,
+        currentEngineRpm: 5000,
+      });
+    }
+
+    const stateBeforePause = tracker.processTelemetry({
+      isRaceOn: true,
+      timestampMS: 1000,
+      carOrdinal: 1024,
+      speed: 40,
+    });
+
+    const fuelBeforePause = stateBeforePause.currentFuelLiters;
+    assert.ok(fuelBeforePause > 0 && fuelBeforePause < 68);
+
+    // PAUSE fuel tracking
+    tracker.setPaused(true);
+
+    // Process telemetry while paused (even if player drives or 100 seconds elapse)
+    for (let i = 0; i < 20; i++) {
+      const pausedState = tracker.processTelemetry({
+        isRaceOn: false,
+        timestampMS: 1000 + (i * 1000), // 20 seconds pass
+        carOrdinal: 1024,
+        speed: 60,
+      });
+      assert.strictEqual(pausedState.currentFuelLiters, fuelBeforePause, 'Fuel state must remain frozen during pause');
+    }
+
+    // RESUME fuel tracking
+    tracker.setPaused(false);
+
+    // Process first frame on resume after 30 seconds gap
+    const stateOnResume = tracker.processTelemetry({
+      isRaceOn: true,
+      timestampMS: 50000, // 50s timestamp
+      carOrdinal: 1024,
+      speed: 40,
+    });
+
+    // Fuel on resume must continue seamlessly from preserved fuel state without sudden drop
+    assert.ok(
+      Math.abs(stateOnResume.currentFuelLiters - fuelBeforePause) < 0.1,
+      `Fuel on resume (${stateOnResume.currentFuelLiters} L) should continue smoothly from pre-pause state (${fuelBeforePause} L)`
+    );
+  });
 });
+

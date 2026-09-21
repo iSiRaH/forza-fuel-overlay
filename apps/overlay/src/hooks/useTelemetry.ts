@@ -13,7 +13,32 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
   const [telemetry, setTelemetry] = useState<Partial<ForzaTelemetryData> | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>(options.defaultUnit || 'kmh');
+  
+  // Fuel Tank Size configuration state (defaults to 60L or persisted value)
+  const [tankCapacityLiters, setTankCapacityLiters] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('forza_tank_capacity');
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 5) return Math.round(val / 5) * 5;
+      }
+    } catch (e) {
+      // localStorage fallback
+    }
+    return 60;
+  });
+
+  const [isFuelTaskPaused, setIsFuelTaskPaused] = useState<boolean>(false);
+  const [showEmptyModal, setShowEmptyModal] = useState<boolean>(false);
+  const [hasDismissedEmptyModal, setHasDismissedEmptyModal] = useState<boolean>(false);
+
   const wsRef = useRef<WebSocket | null>(null);
+
+  const sendControlMessage = useCallback((msg: TelemetryControlMessage) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(msg));
+    }
+  }, []);
 
   useEffect(() => {
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -27,6 +52,17 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
         ws.onopen = () => {
           if (isMounted) {
             setIsConnected(true);
+            // Sync initial tank capacity setting to telemetry server on connect
+            ws.send(JSON.stringify({
+              type: 'SET_TANK_CAPACITY',
+              payload: { capacityLiters: tankCapacityLiters },
+            }));
+            if (isFuelTaskPaused) {
+              ws.send(JSON.stringify({
+                type: 'SET_PAUSED',
+                payload: { isPaused: true },
+              }));
+            }
           }
         };
 
@@ -70,23 +106,52 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
         wsRef.current = null;
       }
     };
-  }, [wsUrl]);
+  }, [wsUrl, tankCapacityLiters, isFuelTaskPaused]);
 
   const toggleSpeedUnit = useCallback(() => {
     setSpeedUnit((prev) => (prev === 'kmh' ? 'mph' : 'kmh'));
   }, []);
 
-  const refillFuel = useCallback(() => {
-    // Send REFILL_FUEL command over WebSocket if connected
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const msg: TelemetryControlMessage = { type: 'REFILL_FUEL' };
-      wsRef.current.send(JSON.stringify(msg));
+  const updateTankCapacity = useCallback((newCapacity: number) => {
+    const valid = Math.max(5, Math.round(newCapacity / 5) * 5);
+    setTankCapacityLiters(valid);
+    try {
+      localStorage.setItem('forza_tank_capacity', valid.toString());
+    } catch (e) {
+      // ignore
     }
+    sendControlMessage({ type: 'SET_TANK_CAPACITY', payload: { capacityLiters: valid } });
+  }, [sendControlMessage]);
 
-    // Optimistic local telemetry update
+  const increaseTankCapacity = useCallback(() => {
+    updateTankCapacity(tankCapacityLiters + 5);
+  }, [tankCapacityLiters, updateTankCapacity]);
+
+  const decreaseTankCapacity = useCallback(() => {
+    updateTankCapacity(tankCapacityLiters - 5);
+  }, [tankCapacityLiters, updateTankCapacity]);
+
+  const togglePauseFuelTask = useCallback(() => {
+    setIsFuelTaskPaused((prev) => {
+      const nextState = !prev;
+      sendControlMessage({ type: 'SET_PAUSED', payload: { isPaused: nextState } });
+      return nextState;
+    });
+  }, [sendControlMessage]);
+
+  const dismissEmptyModal = useCallback(() => {
+    setHasDismissedEmptyModal(true);
+    setShowEmptyModal(false);
+  }, []);
+
+  const refillFuel = useCallback(() => {
+    sendControlMessage({ type: 'REFILL_FUEL' });
+    setHasDismissedEmptyModal(false);
+    setShowEmptyModal(false);
+
     setTelemetry((prev) => {
       if (!prev) return null;
-      const maxCap = prev.maxFuelCapacityLiters ?? 60;
+      const maxCap = tankCapacityLiters || prev.maxFuelCapacityLiters || 60;
       return {
         ...prev,
         fuel: 1.0,
@@ -94,7 +159,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
         fuelSpentLiters: 0,
       };
     });
-  }, []);
+  }, [sendControlMessage, tankCapacityLiters]);
 
   const rawSpeedMps = telemetry?.speed ?? 0;
   const speedKmH = mpsToKmh(rawSpeedMps);
@@ -107,15 +172,27 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
   const isShiftWarning = rpmPercent >= 90;
 
   const fuelRatio = telemetry?.fuel ?? 1.0;
-  const fuelPct = fuelRatio * 100;
+  const fuelPct = Math.max(0, Math.min(100, fuelRatio * 100));
   const isFuelLow = fuelPct < 20;
   const isFuelCritical = fuelPct < 10;
 
-  const maxFuelCapacityLiters = telemetry?.maxFuelCapacityLiters ?? 60;
+  const maxFuelCapacityLiters = telemetry?.maxFuelCapacityLiters ?? tankCapacityLiters;
   const currentFuelLiters = telemetry?.currentFuelLiters ?? (fuelRatio * maxFuelCapacityLiters);
   const fuelSpentLiters = telemetry?.fuelSpentLiters ?? 0;
   const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 3.0;
   const fuelConsumptionRate = telemetry?.fuelConsumptionRate ?? 0;
+
+  // Detect transition into empty state (fuel <= 0) and trigger popup once
+  useEffect(() => {
+    if (currentFuelLiters <= 0.001 && telemetry !== null) {
+      if (!hasDismissedEmptyModal) {
+        setShowEmptyModal(true);
+      }
+    } else if (currentFuelLiters > 0.05) {
+      setHasDismissedEmptyModal(false);
+      setShowEmptyModal(false);
+    }
+  }, [currentFuelLiters, hasDismissedEmptyModal, telemetry]);
 
   const carName = telemetry?.carName ?? (telemetry?.carOrdinal ? `Forza Car #${telemetry.carOrdinal}` : '---');
   const piClassName = telemetry?.piClassName ?? 'S1';
@@ -153,5 +230,14 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     piBadgeColor,
     piBadgeBg,
     carOrdinal,
+    // Fuel enhancements state & actions
+    tankCapacityLiters,
+    increaseTankCapacity,
+    decreaseTankCapacity,
+    updateTankCapacity,
+    isFuelTaskPaused,
+    togglePauseFuelTask,
+    showEmptyModal,
+    dismissEmptyModal,
   };
 }

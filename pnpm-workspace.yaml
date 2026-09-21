@@ -2,5 +2,5 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
-  electron-winstaller: set this to true or false
-  esbuild: set this to true or false
+  electron-winstaller: true
+  esbuild: true

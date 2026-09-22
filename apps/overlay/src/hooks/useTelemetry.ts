@@ -22,7 +22,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
         const val = parseInt(saved, 10);
         if (!isNaN(val) && val >= 5) return Math.round(val / 5) * 5;
       }
-    } catch (e) {
+    } catch {
       // localStorage fallback
     }
     return 60;
@@ -71,8 +71,15 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
           try {
             const data = JSON.parse(event.data) as Partial<ForzaTelemetryData>;
             setTelemetry(data);
-          } catch (e) {
-            console.error('Failed to parse WS telemetry message:', e);
+            const liters = data.currentFuelLiters ?? (data.fuel ? data.fuel * 60 : 60);
+            if (liters <= 0.001) {
+              setShowEmptyModal(true);
+            } else if (liters > 0.05) {
+              setHasDismissedEmptyModal(false);
+              setShowEmptyModal(false);
+            }
+          } catch {
+            console.error('Failed to parse WS telemetry message');
           }
         };
 
@@ -88,7 +95,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
             setIsConnected(false);
           }
         };
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setIsConnected(false);
           reconnectTimeout = setTimeout(connect, 2000);
@@ -117,7 +124,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     setTankCapacityLiters(valid);
     try {
       localStorage.setItem('forza_tank_capacity', valid.toString());
-    } catch (e) {
+    } catch {
       // ignore
     }
     sendControlMessage({ type: 'SET_TANK_CAPACITY', payload: { capacityLiters: valid } });
@@ -182,17 +189,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
   const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 3.0;
   const fuelConsumptionRate = telemetry?.fuelConsumptionRate ?? 0;
 
-  // Detect transition into empty state (fuel <= 0) and trigger popup once
-  useEffect(() => {
-    if (currentFuelLiters <= 0.001 && telemetry !== null) {
-      if (!hasDismissedEmptyModal) {
-        setShowEmptyModal(true);
-      }
-    } else if (currentFuelLiters > 0.05) {
-      setHasDismissedEmptyModal(false);
-      setShowEmptyModal(false);
-    }
-  }, [currentFuelLiters, hasDismissedEmptyModal, telemetry]);
+  const isModalOpen = showEmptyModal && !hasDismissedEmptyModal;
 
   const carName = telemetry?.carName ?? (telemetry?.carOrdinal ? `Forza Car #${telemetry.carOrdinal}` : '---');
   const piClassName = telemetry?.piClassName ?? 'S1';
@@ -237,7 +234,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     updateTankCapacity,
     isFuelTaskPaused,
     togglePauseFuelTask,
-    showEmptyModal,
+    showEmptyModal: isModalOpen,
     dismissEmptyModal,
   };
 }

@@ -42,8 +42,20 @@ export function App() {
     dismissEmptyModal,
   } = useTelemetry();
 
+  const handleMouseEnter = () => {
+    window.electronAPI?.setIgnoreMouseEvents(false);
+  };
+
+  const handleMouseLeave = () => {
+    window.electronAPI?.setIgnoreMouseEvents(true, { forward: true });
+  };
+
   return (
-    <div className="overlay-container">
+    <div
+      className="overlay-container"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Zero Fuel Empty Alert Popup */}
       <FuelEmptyModal
         isOpen={showEmptyModal}

@@ -98,6 +98,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  -webkit-app-region: no-drag;
+}
+
+button {
+  -webkit-app-region: no-drag;
 }
 
 .unit-toggle-btn {
@@ -110,6 +115,7 @@
   font-size: 11px;
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .unit-toggle-btn:hover {
@@ -642,6 +648,7 @@
   justify-content: center;
   z-index: 9999;
   animation: modal-fade 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 @keyframes modal-fade {
@@ -652,6 +659,7 @@
 .fuel-empty-modal {
   background: linear-gradient(145deg, rgba(30, 10, 20, 0.95), rgba(15, 15, 25, 0.98));
   border: 2px solid #ff0055;
+  -webkit-app-region: no-drag;
   border-radius: 16px;
   padding: 24px;
   width: 320px;

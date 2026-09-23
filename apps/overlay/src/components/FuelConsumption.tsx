@@ -7,6 +7,7 @@ interface FuelConsumptionProps {
   distanceTraveled: number;
   fuelSpentLiters?: number;
   fuelConsumptionRate?: number;
+  fuelRateLPerHour?: number;
 }
 
 export const FuelConsumption: React.FC<FuelConsumptionProps> = ({
@@ -15,7 +16,7 @@ export const FuelConsumption: React.FC<FuelConsumptionProps> = ({
   bestLapTime,
   distanceTraveled,
   fuelSpentLiters,
-  fuelConsumptionRate,
+  fuelRateLPerHour,
 }) => {
   const formatTime = (seconds: number) => {
     if (!seconds || seconds <= 0) return '--:--.--';
@@ -26,7 +27,9 @@ export const FuelConsumption: React.FC<FuelConsumptionProps> = ({
 
   const distanceKm = (distanceTraveled / 1000).toFixed(2);
   const spentL = fuelSpentLiters !== undefined ? fuelSpentLiters.toFixed(2) : '0.00';
-  const burnRate = fuelConsumptionRate !== undefined && fuelConsumptionRate > 0 ? `${fuelConsumptionRate.toFixed(1)} L/100km` : '-- L/100km';
+  const burnRateLh = fuelRateLPerHour !== undefined && fuelRateLPerHour > 0
+    ? `${fuelRateLPerHour.toFixed(2)} L/h`
+    : '-- L/h';
 
   return (
     <div className="telemetry-card">
@@ -57,11 +60,10 @@ export const FuelConsumption: React.FC<FuelConsumptionProps> = ({
         </div>
 
         <div className="stat-box">
-          <span className="stat-label">BURN RATE</span>
-          <span className="stat-value">{burnRate}</span>
+          <span className="stat-label">CONSUMPTION</span>
+          <span className="stat-value highlight-fuel">{burnRateLh}</span>
         </div>
       </div>
     </div>
   );
 };
-

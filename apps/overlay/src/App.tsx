@@ -26,6 +26,9 @@ export function App() {
     fuelSpentLiters,
     engineDisplacementLiters,
     fuelConsumptionRate,
+    fuelRateLPerHour,
+    remainingTimeFormatted,
+    remainingDistanceFormatted,
     isFuelLow,
     isFuelCritical,
     carName,
@@ -158,6 +161,8 @@ export function App() {
         <RemainingLaps
           fuelPct={fuelPct}
           bestLapTime={telemetry?.bestLap ?? 0}
+          remainingTimeFormatted={remainingTimeFormatted}
+          remainingDistanceFormatted={remainingDistanceFormatted}
         />
 
         <FuelConsumption
@@ -167,6 +172,7 @@ export function App() {
           distanceTraveled={telemetry?.distanceTraveled ?? 0}
           fuelSpentLiters={fuelSpentLiters}
           fuelConsumptionRate={fuelConsumptionRate}
+          fuelRateLPerHour={fuelRateLPerHour}
         />
 
         <FuelStatus

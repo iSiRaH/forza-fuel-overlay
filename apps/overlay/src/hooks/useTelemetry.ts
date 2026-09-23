@@ -186,8 +186,12 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
   const maxFuelCapacityLiters = telemetry?.maxFuelCapacityLiters ?? tankCapacityLiters;
   const currentFuelLiters = telemetry?.currentFuelLiters ?? (fuelRatio * maxFuelCapacityLiters);
   const fuelSpentLiters = telemetry?.fuelSpentLiters ?? 0;
-  const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 3.0;
+  const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 2.0;
   const fuelConsumptionRate = telemetry?.fuelConsumptionRate ?? 0;
+  const fuelRateLPerHour = telemetry?.fuelRateLPerHour ?? 0;
+  const remainingTimeFormatted = telemetry?.remainingTimeFormatted ?? '--';
+  const remainingDistanceKm = telemetry?.remainingDistanceKm ?? null;
+  const remainingDistanceFormatted = telemetry?.remainingDistanceFormatted ?? '--';
 
   const isModalOpen = showEmptyModal && !hasDismissedEmptyModal;
 
@@ -219,6 +223,10 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     fuelSpentLiters,
     engineDisplacementLiters,
     fuelConsumptionRate,
+    fuelRateLPerHour,
+    remainingTimeFormatted,
+    remainingDistanceKm,
+    remainingDistanceFormatted,
     isFuelLow,
     isFuelCritical,
     carName,

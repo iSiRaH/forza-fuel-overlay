@@ -18,7 +18,11 @@ export interface ForzaTelemetryData {
   currentFuelLiters?: number | undefined; // current fuel in liters
   fuelSpentLiters?: number | undefined; // fuel spent so far in liters
   engineDisplacementLiters?: number | undefined; // engine displacement capacity in liters
-  fuelConsumptionRate?: number | undefined; // consumption rate in L/100km or L/h
+  fuelConsumptionRate?: number | undefined; // consumption rate in L/100km
+  fuelRateLPerHour?: number | undefined; // instantaneous burn rate in L/h
+  remainingTimeFormatted?: string | undefined; // estimated remaining driving time (e.g. "2h 00m" or "--")
+  remainingDistanceKm?: number | null | undefined; // estimated range in km
+  remainingDistanceFormatted?: string | undefined; // formatted remaining range (e.g. "200 km" or "--")
   distanceTraveled: number;
   bestLap: number;
   lastLap: number;

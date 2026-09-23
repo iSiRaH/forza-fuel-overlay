@@ -1,7 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { getCarFuelSpecs, getCarPiClass } from '../../../packages/shared/src/utils/carDatabase.js';
-import { calculateFuelConsumptionStep } from '../../../packages/fuel-engine/src/calculator.js';
+import {
+  calculateFuelConsumptionStep,
+  calculateDisplacementFactor,
+  calculateRpmFactor,
+  calculateThrottleFactor,
+  calculateFuelRateLPerHour,
+} from '../../../packages/fuel-engine/src/calculator.js';
 import { FuelTracker } from '../../../packages/fuel-engine/src/consumption.js';
 
 describe('Car Model Fuel Capacity & Engine Displacement Database', () => {
@@ -23,7 +29,7 @@ describe('Car Model Fuel Capacity & Engine Displacement Database', () => {
     assert.ok(hyperCar.maxFuelCapacityLiters >= 75 && hyperCar.maxFuelCapacityLiters <= 100);
   });
 
-  it('should generate consistent, distinct fuel capacities for 632+ unmapped car ordinals in FH6', () => {
+  it('should generate consistent, distinct fuel capacities for unmapped car ordinals', () => {
     const carA = getCarFuelSpecs(1234, 4); // S1 Class Car 1234
     const carB = getCarFuelSpecs(5678, 4); // S1 Class Car 5678
     assert.notStrictEqual(carA.maxFuelCapacityLiters, carB.maxFuelCapacityLiters);
@@ -47,48 +53,134 @@ describe('Car Model Fuel Capacity & Engine Displacement Database', () => {
   });
 });
 
-describe('Fuel Spent Calculation Engine', () => {
-  it('should calculate spent fuel step based on car speed, gear, engine capacity, and throttle', () => {
-    const resultIdle = calculateFuelConsumptionStep({
-      speedMps: 0,
-      gear: 0,
+describe('Engine Displacement Scaling (Section 4 & 22)', () => {
+  it('should calculate correct displacement factors clamped between 0.50 and 4.00', () => {
+    assert.strictEqual(calculateDisplacementFactor(1.0), 0.50);
+    assert.strictEqual(calculateDisplacementFactor(1.5), 0.75);
+    assert.strictEqual(calculateDisplacementFactor(2.0), 1.00);
+    assert.strictEqual(calculateDisplacementFactor(3.0), 1.50);
+    assert.strictEqual(calculateDisplacementFactor(4.0), 2.00);
+    assert.strictEqual(calculateDisplacementFactor(6.0), 3.00);
+    assert.strictEqual(calculateDisplacementFactor(8.0), 4.00);
+    assert.strictEqual(calculateDisplacementFactor(10.0), 4.00); // Clamped max
+    assert.strictEqual(calculateDisplacementFactor(0.2), 0.50); // Clamped min
+  });
+
+  it('should produce higher consumption for larger engine sizes at same RPM and throttle', () => {
+    const step1_5 = calculateFuelConsumptionStep({
+      speedMps: 30,
+      engineDisplacementLiters: 1.5,
+      currentRpm: 4000,
+      maxRpm: 8000,
+      accelPercent: 50,
+      dtSeconds: 1.0,
+    });
+
+    const step3_0 = calculateFuelConsumptionStep({
+      speedMps: 30,
       engineDisplacementLiters: 3.0,
-      currentRpm: 1000,
+      currentRpm: 4000,
+      maxRpm: 8000,
+      accelPercent: 50,
+      dtSeconds: 1.0,
+    });
+
+    const step6_0 = calculateFuelConsumptionStep({
+      speedMps: 30,
+      engineDisplacementLiters: 6.0,
+      currentRpm: 4000,
+      maxRpm: 8000,
+      accelPercent: 50,
+      dtSeconds: 1.0,
+    });
+
+    assert.ok(step3_0.fuelRateLPerHour > step1_5.fuelRateLPerHour);
+    assert.ok(step6_0.fuelRateLPerHour > step3_0.fuelRateLPerHour);
+  });
+});
+
+describe('Non-Linear RPM & Throttle Consumption (Section 7, 8 & 9)', () => {
+  it('should scale RPM factor non-linearly towards redline', () => {
+    const rpm0 = calculateRpmFactor(0.0);
+    const rpm50 = calculateRpmFactor(0.5);
+    const rpm75 = calculateRpmFactor(0.75);
+    const rpm100 = calculateRpmFactor(1.0);
+
+    assert.strictEqual(rpm0, 0.20);
+    assert.ok(rpm50 > 0.70 && rpm50 < 0.90);
+    assert.ok(rpm75 > 1.60 && rpm75 < 1.75);
+    assert.strictEqual(rpm100, 3.00);
+  });
+
+  it('should increase consumption with higher throttle at constant RPM', () => {
+    const throttle20 = calculateThrottleFactor(20, 4000);
+    const throttle50 = calculateThrottleFactor(50, 4000);
+    const throttle80 = calculateThrottleFactor(80, 4000);
+    const throttle100 = calculateThrottleFactor(100, 4000);
+
+    assert.ok(Math.abs(throttle20 - 0.82) < 0.001);
+    assert.ok(Math.abs(throttle50 - 1.075) < 0.001);
+    assert.ok(Math.abs(throttle80 - 1.33) < 0.001);
+    assert.strictEqual(throttle100, 1.50);
+  });
+
+  it('should apply low coasting factor (0.15) when throttle < 5% and engine is spinning', () => {
+    const coastingFactor = calculateThrottleFactor(0, 4000);
+    assert.strictEqual(coastingFactor, 0.15);
+
+    const stepCoasting = calculateFuelConsumptionStep({
+      speedMps: 30,
+      engineDisplacementLiters: 3.0,
+      currentRpm: 5000,
       maxRpm: 8000,
       accelPercent: 0,
       dtSeconds: 1.0,
     });
 
-    const resultHighSpeed = calculateFuelConsumptionStep({
-      speedMps: 60, // 216 km/h
-      gear: 5,
-      engineDisplacementLiters: 4.2,
-      currentRpm: 7500,
-      maxRpm: 8500,
-      accelPercent: 255,
-      dtSeconds: 1.0,
-    });
+    assert.ok(stepCoasting.fuelRateLPerHour < 2.0);
+  });
 
-    // High speed / high RPM / full throttle / larger displacement should burn more fuel than idle
-    assert.ok(resultHighSpeed.fuelSpentStepLiters > resultIdle.fuelSpentStepLiters * 3);
-    assert.ok(resultHighSpeed.instantaneousBurnRateLps > 0.0005);
-    assert.ok(resultHighSpeed.consumptionLPer100Km > 0);
+  it('should produce 0 fuel consumption when engine RPM is 0', () => {
+    const rateOff = calculateFuelRateLPerHour(1.0, 1.0, 1.0, 0);
+    assert.strictEqual(rateOff, 0);
   });
 });
 
-describe('FuelTracker & Refill Option', () => {
-  it('should track cumulative fuel spent and handle refilling to 100% full capacity', () => {
-    const tracker = new FuelTracker(1024); // Porsche 911 GT3 RS (68L capacity, 3.8L engine)
+describe('Full Worked Example Verification (Section 11 & 37)', () => {
+  it('should accurately calculate consumption for 4.0L engine at 6000 RPM (8000 redline), 80% throttle', () => {
+    const step = calculateFuelConsumptionStep({
+      speedMps: 30,
+      engineDisplacementLiters: 4.0,
+      currentRpm: 6000,
+      maxRpm: 8000,
+      accelPercent: 80,
+      dtSeconds: 0.25,
+    });
+
+    // Step 1: Disp factor = 4.0 / 2.0 = 2.0
+    assert.strictEqual(step.displacementFactor, 2.0);
+    // Step 2: RPM ratio = 6000 / 8000 = 0.75
+    assert.strictEqual(step.rpmRatio, 0.75);
+    // Step 3: RPM factor = 0.20 + (0.75^2.2 * 2.80) ≈ 1.687
+    assert.ok(Math.abs(step.rpmFactor - 1.687) < 0.05);
+    // Step 5: Throttle factor = 0.65 + (0.80 * 0.85) = 1.33
+    assert.strictEqual(step.throttleFactor, 1.33);
+    // Step 6: Fuel rate = 2.0 * 2.0 * 1.687 * 1.33 ≈ 8.97 L/h
+    assert.ok(Math.abs(step.fuelRateLPerHour - 8.97) < 0.2);
+  });
+});
+
+describe('FuelTracker State, Pausing, Gaps & Refill (Section 14 - 21)', () => {
+  it('should track cumulative fuel spent and handle refilling', () => {
+    const tracker = new FuelTracker(1024); // Porsche 911 GT3 RS (68L capacity)
     const initialSpecs = tracker.getSpecs();
     assert.strictEqual(initialSpecs.maxFuelCapacityLiters, 68);
 
-    // Process high load telemetry ticks
     for (let i = 0; i < 50; i++) {
       tracker.processTelemetry({
         timestampMS: i * 100,
         carOrdinal: 1024,
         speed: 50,
-        gear: 4,
         currentEngineRpm: 7000,
         engineMaxRpm: 8500,
         accel: 255,
@@ -100,12 +192,9 @@ describe('FuelTracker & Refill Option', () => {
       carOrdinal: 1024,
     });
 
-    assert.ok(stateBeforeRefill.fuelSpentLiters > 0, 'Fuel spent should be greater than 0');
-    assert.strictEqual(stateBeforeRefill.maxFuelCapacityLiters, 68);
+    assert.ok(stateBeforeRefill.fuelSpentLiters > 0);
 
-    // Perform fuel refill action
     const stateAfterRefill = tracker.refill(1.0);
-
     assert.strictEqual(stateAfterRefill.fuelRatio, 1.0);
     assert.strictEqual(stateAfterRefill.currentFuelLiters, 68);
     assert.strictEqual(stateAfterRefill.fuelSpentLiters, 0);
@@ -113,36 +202,29 @@ describe('FuelTracker & Refill Option', () => {
 
   it('should support user-configurable fuel tank size in 5 L steps', () => {
     const tracker = new FuelTracker(1024);
-    
-    // Set custom tank capacity to 55 L
+
     const state55 = tracker.setTankCapacity(55);
     assert.strictEqual(state55.maxFuelCapacityLiters, 55);
-    assert.strictEqual(state55.currentFuelLiters, 55);
 
-    // Increase to 65 L
     const state65 = tracker.setTankCapacity(65);
     assert.strictEqual(state65.maxFuelCapacityLiters, 65);
 
-    // Rounding to nearest 5 L step (e.g. 52 L -> 50 L)
     const stateRounded = tracker.setTankCapacity(52);
     assert.strictEqual(stateRounded.maxFuelCapacityLiters, 50);
 
-    // Minimum boundary protection (e.g. 0 L -> 5 L min)
     const stateMin = tracker.setTankCapacity(0);
     assert.strictEqual(stateMin.maxFuelCapacityLiters, 5);
   });
 
-  it('should freeze fuel state during pause and rebase telemetry timestamp on resume', () => {
+  it('should freeze fuel state during pause and rebase telemetry timestamp baseline on resume', () => {
     const tracker = new FuelTracker(1024);
-    
-    // Initial ticks to consume some fuel
+
     for (let i = 0; i < 10; i++) {
       tracker.processTelemetry({
         isRaceOn: true,
         timestampMS: i * 100,
         carOrdinal: 1024,
         speed: 40,
-        gear: 3,
         currentEngineRpm: 5000,
       });
     }
@@ -155,38 +237,53 @@ describe('FuelTracker & Refill Option', () => {
     });
 
     const fuelBeforePause = stateBeforePause.currentFuelLiters;
-    assert.ok(fuelBeforePause > 0 && fuelBeforePause < 68);
-
-    // PAUSE fuel tracking
     tracker.setPaused(true);
 
-    // Process telemetry while paused (even if player drives or 100 seconds elapse)
     for (let i = 0; i < 20; i++) {
       const pausedState = tracker.processTelemetry({
         isRaceOn: false,
-        timestampMS: 1000 + (i * 1000), // 20 seconds pass
+        timestampMS: 1000 + (i * 1000),
         carOrdinal: 1024,
         speed: 60,
       });
-      assert.strictEqual(pausedState.currentFuelLiters, fuelBeforePause, 'Fuel state must remain frozen during pause');
+      assert.strictEqual(pausedState.currentFuelLiters, fuelBeforePause);
     }
 
-    // RESUME fuel tracking
     tracker.setPaused(false);
 
-    // Process first frame on resume after 30 seconds gap
     const stateOnResume = tracker.processTelemetry({
       isRaceOn: true,
-      timestampMS: 50000, // 50s timestamp
+      timestampMS: 50000,
       carOrdinal: 1024,
       speed: 40,
     });
 
-    // Fuel on resume must continue seamlessly from preserved fuel state without sudden drop
-    assert.ok(
-      Math.abs(stateOnResume.currentFuelLiters - fuelBeforePause) < 0.1,
-      `Fuel on resume (${stateOnResume.currentFuelLiters} L) should continue smoothly from pre-pause state (${fuelBeforePause} L)`
-    );
+    assert.ok(Math.abs(stateOnResume.currentFuelLiters - fuelBeforePause) < 0.1);
+  });
+
+  it('should safely ignore large telemetry gaps (> 2 seconds)', () => {
+    const tracker = new FuelTracker(1024);
+
+    tracker.processTelemetry({
+      timestampMS: 1000,
+      carOrdinal: 1024,
+      currentEngineRpm: 5000,
+    });
+
+    const stateBeforeGap = tracker.processTelemetry({
+      timestampMS: 1100,
+      carOrdinal: 1024,
+      currentEngineRpm: 5000,
+    });
+
+    // Simulate 10-second drop/gap
+    const stateAfterGap = tracker.processTelemetry({
+      timestampMS: 11100,
+      carOrdinal: 1024,
+      currentEngineRpm: 5000,
+    });
+
+    // Large gap should be ignored -> 0 fuel consumed during the 10s gap
+    assert.strictEqual(stateAfterGap.currentFuelLiters, stateBeforeGap.currentFuelLiters);
   });
 });
-

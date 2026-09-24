@@ -7,6 +7,8 @@ interface FuelGaugeProps {
   isFuelLow: boolean;
   isFuelCritical: boolean;
   onRefill?: () => void;
+  onIncreaseTankCapacity?: () => void;
+  onDecreaseTankCapacity?: () => void;
 }
 
 export const FuelGauge: React.FC<FuelGaugeProps> = ({
@@ -16,6 +18,8 @@ export const FuelGauge: React.FC<FuelGaugeProps> = ({
   isFuelLow,
   isFuelCritical,
   onRefill,
+  onIncreaseTankCapacity,
+  onDecreaseTankCapacity,
 }) => {
   const getBarColor = () => {
     if (isFuelCritical) return 'linear-gradient(90deg, #ff4d4d, #ff0055)';
@@ -23,8 +27,9 @@ export const FuelGauge: React.FC<FuelGaugeProps> = ({
     return 'linear-gradient(90deg, #00f2fe, #4facfe)';
   };
 
-  const currentL = currentFuelLiters !== undefined ? currentFuelLiters.toFixed(1) : ((fuelPct / 100) * (maxFuelCapacityLiters ?? 60)).toFixed(1);
+  const currentL = currentFuelLiters !== undefined ? Math.max(0, currentFuelLiters).toFixed(1) : ((fuelPct / 100) * (maxFuelCapacityLiters ?? 60)).toFixed(1);
   const maxL = maxFuelCapacityLiters !== undefined ? maxFuelCapacityLiters.toFixed(1) : '60.0';
+  const tankSize = Math.round(maxFuelCapacityLiters ?? 60);
 
   return (
     <div className="fuel-gauge-card">
@@ -66,6 +71,31 @@ export const FuelGauge: React.FC<FuelGaugeProps> = ({
         <span>50%</span>
         <span>75%</span>
         <span>F ({maxL}L)</span>
+      </div>
+
+      <div className="tank-capacity-control-row">
+        <span className="tank-capacity-label">Fuel Tank Capacity</span>
+        <div className="tank-capacity-stepper">
+          <button
+            type="button"
+            className="stepper-btn"
+            onClick={onDecreaseTankCapacity}
+            disabled={!onDecreaseTankCapacity || tankSize <= 5}
+            title="Decrease fuel tank capacity (-5 L)"
+          >
+            [-]
+          </button>
+          <span className="capacity-value-display">{tankSize} L</span>
+          <button
+            type="button"
+            className="stepper-btn"
+            onClick={onIncreaseTankCapacity}
+            disabled={!onIncreaseTankCapacity}
+            title="Increase fuel tank capacity (+5 L)"
+          >
+            [+]
+          </button>
+        </div>
       </div>
     </div>
   );

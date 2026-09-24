@@ -42,4 +42,3 @@ export const WarningIndicator: React.FC<WarningIndicatorProps> = ({
     </div>
   );
 };
-

@@ -61,4 +61,3 @@ export const FuelEmptyModal: React.FC<FuelEmptyModalProps> = ({ isOpen, onClose,
     </div>
   );
 };
-

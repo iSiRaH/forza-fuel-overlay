@@ -1,18 +1,22 @@
 {
   "name": "forza-fuel-overlay",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Forza Horizon 6 Telemetry & Fuel Overlay",
+  "author": "Isira Hansaja <isirahansaja@gmail.com>",
+  "homepage": "https://github.com/iSiRaH/forza-fuel-overlay",
+  "main": "apps/overlay/electron/main.js",
   "scripts": {
     "dev": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev\" \"pnpm --filter overlay dev\"",
     "dev:mock": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev:mock\" \"pnpm --filter overlay dev\"",
     "dev:app": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev\" \"pnpm --filter overlay dev:electron\"",
     "dev:app:mock": "concurrently -k -n \"telemetry,overlay\" -c \"cyan,magenta\" \"pnpm --filter telemetry dev:mock\" \"pnpm --filter overlay dev:electron\"",
     "start": "pnpm run dev",
-    "test": "pnpm --filter telemetry test"
+    "test": "pnpm --filter telemetry test",
+    "build:overlay": "pnpm --filter overlay build",
+    "package:win": "pnpm build:overlay && electron-builder --win nsis portable",
+    "package:linux": "pnpm build:overlay && electron-builder --linux deb rpm",
+    "package:all": "pnpm build:overlay && electron-builder --win nsis portable --linux deb rpm"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "devEngines": {
     "packageManager": {

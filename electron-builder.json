@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/electron-builder.json",
+  "appId": "com.forza.fueloverlay",
+  "productName": "Forza Fuel Overlay",
+  "copyright": "Copyright © 2026",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "apps/overlay/dist/**/*",
+    "apps/overlay/electron/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Forza Fuel Overlay"
+  },
+  "portable": {
+    "artifactName": "${productName}-Portable-${version}.${ext}"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64"]
+      },
+      {
+        "target": "rpm",
+        "arch": ["x64"]
+      }
+    ],
+    "maintainer": "Forza Fuel Overlay Developer <isirahansaja@gmail.com>",
+    "category": "Utility"
+  }
+}

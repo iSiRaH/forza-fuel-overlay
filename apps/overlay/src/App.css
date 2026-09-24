@@ -15,6 +15,16 @@
   flex-direction: column;
   gap: 10px;
   position: relative;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease;
+}
+
+.overlay-container.minimal-mode {
+  width: 420px;
+  max-width: 95vw;
+  padding: 10px 14px;
+  background: rgba(12, 16, 26, 0.88);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Hide scrollbar but keep scrollable */
@@ -28,6 +38,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 8px;
   -webkit-app-region: drag;
@@ -38,6 +49,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -69,6 +82,8 @@
   font-weight: 900;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: 2px;
+  margin-right: 12px;
 }
 
 .forza-pi-badge .pi-letter {
@@ -97,8 +112,11 @@
 .controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   -webkit-app-region: no-drag;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 button {
@@ -742,4 +760,426 @@ button {
 .modal-ok-btn:active {
   transform: translateY(1px);
 }
+
+/* ==========================================
+   UI MODE SWITCHER BUTTONS & MINIMAL HUD CSS
+   ========================================== */
+
+.mode-toggle-btn {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(79, 172, 254, 0.25));
+  border: 1px solid var(--accent-cyan);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+  -webkit-app-region: no-drag;
+}
+
+.mode-toggle-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.45), rgba(79, 172, 254, 0.45));
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(0, 242, 254, 0.6);
+}
+
+.mode-toggle-btn .hotkey-tag {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  color: var(--accent-neon-yellow);
+}
+
+/* Minimal Overlay Wrapper */
+.minimal-overlay-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.shift-flash-line {
+  position: absolute;
+  top: -10px;
+  left: -12px;
+  right: -12px;
+  height: 3px;
+  background: #ff0055;
+  box-shadow: 0 0 10px #ff0055;
+  animation: flash-shift 0.15s infinite alternate;
+  border-radius: 2px;
+}
+
+.minimal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-app-region: drag;
+  cursor: move;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.minimal-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.minimal-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+  flex-shrink: 0;
+}
+
+.minimal-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  background: linear-gradient(90deg, #00f2fe, #4facfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.minimal-pi-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.minimal-pi-badge .pi-letter {
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.minimal-pi-badge .pi-number {
+  padding: 1px 4px;
+  font-family: var(--font-mono);
+}
+
+.minimal-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.mode-switch-btn.full-dashboard {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.25), rgba(255, 85, 0, 0.25));
+  border: 1px solid var(--accent-warning);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mode-switch-btn.full-dashboard:hover {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.45), rgba(255, 85, 0, 0.45));
+  transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+}
+
+.mode-switch-btn .hotkey-badge {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  color: #ffee00;
+}
+
+.settings-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.settings-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Minimal Fuel Hero Readout */
+.minimal-fuel-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.minimal-fuel-readout {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.fuel-pct-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuel-icon {
+  font-size: 16px;
+}
+
+.minimal-fuel-pct {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 12px currentColor;
+}
+
+.minimal-liters-badge {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.minimal-liters-badge .liters-val {
+  color: #00f2fe;
+  font-family: var(--font-mono);
+}
+
+.minimal-liters-badge .max-liters {
+  color: var(--text-muted);
+}
+
+/* Minimal Gauge Track */
+.minimal-gauge-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.minimal-gauge-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.25s ease-out;
+}
+
+/* Minimal Warning Banner */
+.minimal-warning-pill {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.minimal-warning-pill.low {
+  background: rgba(255, 170, 0, 0.85);
+  color: #000;
+}
+
+.minimal-warning-pill.critical {
+  background: rgba(255, 0, 85, 0.95);
+  color: #fff;
+  animation: pulse-crit 0.6s infinite alternate;
+}
+
+/* Minimal Stats Grid */
+.minimal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.minimal-stat-item {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 5px 6px;
+  border-radius: 6px;
+}
+
+.minimal-stat-item .stat-name {
+  font-size: 8px;
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.minimal-stat-item .stat-val {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.minimal-stat-item .stat-val.highlight {
+  color: var(--accent-neon-yellow);
+}
+
+.minimal-stat-item .gear-speed-val {
+  color: #00f2fe;
+  font-size: 11px;
+}
+
+/* Minimal Action Bar */
+.minimal-action-bar {
+  display: flex;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.minimal-action-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.minimal-action-btn:hover {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: var(--accent-cyan);
+}
+
+.minimal-action-btn.refill {
+  background: linear-gradient(135deg, rgba(0, 198, 255, 0.3), rgba(0, 114, 255, 0.3));
+  border-color: rgba(0, 198, 255, 0.5);
+}
+
+.minimal-action-btn.refill:hover {
+  background: linear-gradient(135deg, rgba(0, 198, 255, 0.6), rgba(0, 114, 255, 0.6));
+}
+
+.minimal-action-btn.pause.paused {
+  background: rgba(255, 170, 0, 0.3);
+  border-color: var(--accent-warning);
+  color: #ffee00;
+}
+
+/* Settings Drawer */
+.minimal-drawer {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.drawer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-label {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.drawer-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-stepper button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.drawer-stepper button:hover:not(:disabled) {
+  background: var(--accent-cyan);
+  color: #000;
+}
+
+.drawer-val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+/* Minimal Footer */
+.minimal-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 4px;
+}
+
+.minimal-footer kbd {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--accent-neon-yellow);
+}
+
 

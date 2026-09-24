@@ -21,6 +21,7 @@ interface MinimalFuelOverlayProps {
   fuelRateLPerHour: number;
   remainingTimeFormatted: string;
   remainingDistanceFormatted: string;
+  isFuelEmpty?: boolean;
   isFuelLow: boolean;
   isFuelCritical: boolean;
   carName: string;
@@ -51,6 +52,7 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
   fuelRateLPerHour,
   remainingTimeFormatted,
   remainingDistanceFormatted,
+  isFuelEmpty: isFuelEmptyProp,
   isFuelLow,
   isFuelCritical,
   carName,
@@ -66,12 +68,23 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
 }) => {
   const [showSettingsDrawer, setShowSettingsDrawer] = useState<boolean>(false);
 
+  const isFuelEmpty = isFuelEmptyProp || fuelPct <= 0.01 || currentFuelLiters <= 0.001;
+
   // Remaining laps estimation
-  const estimatedLaps = Math.max(0, fuelPct / 2.5).toFixed(1);
+  const estimatedLaps = isFuelEmpty ? '0.0' : Math.max(0, fuelPct / 2.5).toFixed(1);
 
   // Status colors
-  const fuelStatusColor = isFuelCritical ? '#ff0055' : isFuelLow ? '#ffaa00' : '#00f2fe';
-  const fuelBarBg = isFuelCritical
+  const fuelStatusColor = isFuelEmpty
+    ? '#ff0055'
+    : isFuelCritical
+    ? '#ff0055'
+    : isFuelLow
+    ? '#ffaa00'
+    : '#00f2fe';
+
+  const fuelBarBg = isFuelEmpty
+    ? 'linear-gradient(90deg, #ff0055, #ff0000)'
+    : isFuelCritical
     ? 'linear-gradient(90deg, #ff4d4d, #ff0055)'
     : isFuelLow
     ? 'linear-gradient(90deg, #ffaa00, #ff5500)'
@@ -80,10 +93,14 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
   const currentL = Math.max(0, currentFuelLiters).toFixed(1);
   const maxL = maxFuelCapacityLiters.toFixed(1);
   const spentL = fuelSpentLiters.toFixed(1);
-  const burnRateText = fuelRateLPerHour > 0 ? `${fuelRateLPerHour.toFixed(1)} L/h` : '-- L/h';
+  const burnRateText = isFuelEmpty
+    ? '0.0 L/h'
+    : fuelRateLPerHour > 0
+    ? `${fuelRateLPerHour.toFixed(1)} L/h`
+    : '-- L/h';
 
   return (
-    <div className="minimal-overlay-wrapper">
+    <div className={`minimal-overlay-wrapper ${isFuelEmpty ? 'fuel-over-active' : ''}`}>
       {/* Top Shift Flash Line */}
       {(isShiftWarning || rpmPercent >= 90) && (
         <div className="shift-flash-line" title={`SHIFT UP NOW! (${Math.round(rpmPercent)}% RPM)`} />
@@ -123,31 +140,50 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
         </div>
       </header>
 
+      {/* Fuel Over Alert Banner when fuel is completely empty */}
+      {isFuelEmpty && (
+        <button
+          type="button"
+          className="minimal-fuel-over-banner"
+          onClick={refillFuel}
+          title="Click to instantly refill fuel tank to 100%"
+        >
+          <div className="over-banner-content">
+            <span className="over-icon">🚨</span>
+            <div className="over-text-group">
+              <span className="over-title">OUT OF FUEL - TANK EMPTY!</span>
+              <span className="over-sub">CLICK HERE TO REFILL 100%</span>
+            </div>
+          </div>
+          <span className="over-action-btn">🔄 REFILL NOW</span>
+        </button>
+      )}
+
       {/* Main Fuel Usage Display (Primary Visual Hero) */}
-      <section className="minimal-fuel-hero">
+      <section className={`minimal-fuel-hero ${isFuelEmpty ? 'hero-fuel-empty' : ''}`}>
         <div className="minimal-fuel-readout">
           <div className="fuel-pct-group">
-            <span className="fuel-icon">⛽</span>
-            <span className="minimal-fuel-pct" style={{ color: fuelStatusColor }}>
-              {fuelPct.toFixed(1)}%
+            <span className="fuel-icon">{isFuelEmpty ? '🚨' : '⛽'}</span>
+            <span className={`minimal-fuel-pct ${isFuelEmpty ? 'text-empty-flash' : ''}`} style={{ color: fuelStatusColor }}>
+              {isFuelEmpty ? '0.0%' : `${fuelPct.toFixed(1)}%`}
             </span>
           </div>
 
           <div className="minimal-liters-badge">
-            <span className="liters-val">{currentL}</span> / <span className="max-liters">{maxL} L</span>
+            <span className="liters-val" style={{ color: isFuelEmpty ? '#ff0055' : undefined }}>{currentL}</span> / <span className="max-liters">{maxL} L</span>
           </div>
         </div>
 
         {/* Dynamic Progress Gauge Bar */}
         <div className="minimal-gauge-track">
           <div
-            className={`minimal-gauge-fill ${isFuelCritical ? 'pulse-critical' : ''}`}
+            className={`minimal-gauge-fill ${isFuelEmpty ? 'pulse-empty-flash' : isFuelCritical ? 'pulse-critical' : ''}`}
             style={{ width: `${Math.min(100, Math.max(0, fuelPct))}%`, background: fuelBarBg }}
           />
         </div>
 
-        {/* Minimal Warning Pill if Fuel Low/Critical */}
-        {(isFuelLow || isFuelCritical) && (
+        {/* Minimal Warning Pill if Fuel Empty/Low/Critical */}
+        {!isFuelEmpty && (isFuelLow || isFuelCritical) && (
           <div className={`minimal-warning-pill ${isFuelCritical ? 'critical' : 'low'}`}>
             {isFuelCritical ? '⚠️ PIT STOP REQUIRED - FUEL CRITICAL!' : '⛽ LOW FUEL WARNING'}
           </div>

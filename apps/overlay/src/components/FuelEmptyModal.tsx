@@ -3,10 +3,19 @@ import React from 'react';
 interface FuelEmptyModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefill?: () => void;
 }
 
-export const FuelEmptyModal: React.FC<FuelEmptyModalProps> = ({ isOpen, onClose }) => {
+export const FuelEmptyModal: React.FC<FuelEmptyModalProps> = ({ isOpen, onClose, onRefill }) => {
   if (!isOpen) return null;
+
+  const handleRefill = () => {
+    if (onRefill) {
+      onRefill();
+    } else {
+      onClose();
+    }
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -18,25 +27,38 @@ export const FuelEmptyModal: React.FC<FuelEmptyModalProps> = ({ isOpen, onClose 
         aria-labelledby="fuel-empty-title"
       >
         <div className="modal-header">
-          <span className="modal-icon">⚠️</span>
-          <h2 id="fuel-empty-title" className="modal-title">FUEL EMPTY</h2>
+          <span className="modal-icon">🚨</span>
+          <h2 id="fuel-empty-title" className="modal-title">TANK EMPTY</h2>
+          <span className="modal-subtitle">0.0% FUEL REMAINING</span>
         </div>
 
         <div className="modal-body">
-          <p className="modal-message">Your fuel tank is empty.</p>
+          <p className="modal-message">
+            Your vehicle has completely run out of fuel. Refill your tank to continue driving.
+          </p>
         </div>
 
         <div className="modal-footer">
+          {onRefill && (
+            <button
+              type="button"
+              className="modal-refill-btn"
+              onClick={handleRefill}
+              autoFocus
+            >
+              🔄 REFILL FUEL (100%)
+            </button>
+          )}
           <button
             type="button"
-            className="modal-ok-btn"
+            className="modal-dismiss-btn"
             onClick={onClose}
-            autoFocus
           >
-            OK
+            DISMISS
           </button>
         </div>
       </div>
     </div>
   );
 };
+

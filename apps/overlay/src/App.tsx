@@ -34,6 +34,7 @@ export function App() {
     fuelRateLPerHour,
     remainingTimeFormatted,
     remainingDistanceFormatted,
+    isFuelEmpty,
     isFuelLow,
     isFuelCritical,
     carName,
@@ -99,7 +100,10 @@ export function App() {
   };
 
   const handleMouseLeave = () => {
-    window.electronAPI?.setIgnoreMouseEvents(true, { forward: true });
+    // If empty modal is showing, keep mouse events active so user can click modal buttons
+    if (!showEmptyModal) {
+      window.electronAPI?.setIgnoreMouseEvents(true, { forward: true });
+    }
   };
 
   return (
@@ -109,7 +113,11 @@ export function App() {
       onMouseLeave={handleMouseLeave}
     >
       {/* Zero Fuel Empty Alert Popup */}
-      <FuelEmptyModal isOpen={showEmptyModal} onClose={dismissEmptyModal} />
+      <FuelEmptyModal
+        isOpen={showEmptyModal}
+        onClose={dismissEmptyModal}
+        onRefill={refillFuel}
+      />
 
       {uiMode === 'minimal' ? (
         /* MINIMAL FUEL USAGE OVERLAY (Distraction-free gameplay HUD) */
@@ -132,6 +140,7 @@ export function App() {
           fuelRateLPerHour={fuelRateLPerHour}
           remainingTimeFormatted={remainingTimeFormatted}
           remainingDistanceFormatted={remainingDistanceFormatted}
+          isFuelEmpty={isFuelEmpty}
           isFuelLow={isFuelLow}
           isFuelCritical={isFuelCritical}
           carName={carName}
@@ -151,6 +160,7 @@ export function App() {
           {/* Shift & Fuel Warning Banners */}
           <WarningIndicator
             isShiftWarning={isShiftWarning}
+            isFuelEmpty={isFuelEmpty}
             isFuelLow={isFuelLow}
             isFuelCritical={isFuelCritical}
           />

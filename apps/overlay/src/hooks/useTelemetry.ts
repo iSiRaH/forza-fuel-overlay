@@ -180,11 +180,14 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
 
   const fuelRatio = telemetry?.fuel ?? 1.0;
   const fuelPct = Math.max(0, Math.min(100, fuelRatio * 100));
-  const isFuelLow = fuelPct < 20;
-  const isFuelCritical = fuelPct < 10;
 
   const maxFuelCapacityLiters = telemetry?.maxFuelCapacityLiters ?? tankCapacityLiters;
   const currentFuelLiters = telemetry?.currentFuelLiters ?? (fuelRatio * maxFuelCapacityLiters);
+
+  const isFuelEmpty = fuelPct <= 0.01 || currentFuelLiters <= 0.001;
+  const isFuelLow = fuelPct < 20 && !isFuelEmpty;
+  const isFuelCritical = fuelPct < 10 && !isFuelEmpty;
+
   const fuelSpentLiters = telemetry?.fuelSpentLiters ?? 0;
   const engineDisplacementLiters = telemetry?.engineDisplacementLiters ?? 2.0;
   const fuelConsumptionRate = telemetry?.fuelConsumptionRate ?? 0;
@@ -227,6 +230,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     remainingTimeFormatted,
     remainingDistanceKm,
     remainingDistanceFormatted,
+    isFuelEmpty,
     isFuelLow,
     isFuelCritical,
     carName,

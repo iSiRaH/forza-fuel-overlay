@@ -653,18 +653,23 @@ button {
 
 /* Fuel Empty Popup Modal */
 .modal-backdrop {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 12, 22, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  border-radius: inherit;
+  box-sizing: border-box;
+  padding: 16px;
   animation: modal-fade 0.2s ease;
   -webkit-app-region: no-drag;
 }
@@ -675,19 +680,19 @@ button {
 }
 
 .fuel-empty-modal {
-  background: linear-gradient(145deg, rgba(30, 10, 20, 0.95), rgba(15, 15, 25, 0.98));
+  background: linear-gradient(145deg, rgba(35, 10, 20, 0.96), rgba(18, 14, 28, 0.98));
   border: 2px solid #ff0055;
   -webkit-app-region: no-drag;
-  border-radius: 16px;
-  padding: 24px;
-  width: 320px;
-  max-width: 90vw;
-  box-shadow: 0 0 40px rgba(255, 0, 85, 0.5), inset 0 0 20px rgba(255, 0, 85, 0.2);
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 0 35px rgba(255, 0, 85, 0.6), inset 0 0 20px rgba(255, 0, 85, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 16px;
+  gap: 12px;
   animation: modal-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -700,11 +705,11 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .modal-icon {
-  font-size: 42px;
+  font-size: 38px;
   text-shadow: 0 0 20px #ff0055;
 }
 
@@ -714,14 +719,23 @@ button {
   font-weight: 900;
   color: #ff0055;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(255, 0, 85, 0.6);
+  text-shadow: 0 0 12px rgba(255, 0, 85, 0.7);
   margin: 0;
+}
+
+.modal-subtitle {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: #ff4d4d;
+  letter-spacing: 1px;
 }
 
 .modal-body {
   color: #e2e8f0;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .modal-message {
@@ -732,33 +746,56 @@ button {
 .modal-footer {
   width: 100%;
   display: flex;
+  gap: 8px;
   justify-content: center;
+  align-items: center;
   margin-top: 4px;
 }
 
-.modal-ok-btn {
-  background: linear-gradient(135deg, #ff0055, #ff4d4d);
+.modal-refill-btn {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
   color: #ffffff;
   border: none;
-  padding: 10px 32px;
+  padding: 8px 16px;
   border-radius: 8px;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.modal-ok-btn:hover {
+.modal-refill-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 0, 85, 0.7);
-  background: linear-gradient(135deg, #ff1a66, #ff6666);
+  box-shadow: 0 6px 20px rgba(0, 198, 255, 0.7);
+  background: linear-gradient(135deg, #00d2ff, #0082ff);
 }
 
-.modal-ok-btn:active {
+.modal-refill-btn:active {
   transform: translateY(1px);
+}
+
+.modal-dismiss-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-dismiss-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 /* ==========================================
@@ -1180,6 +1217,104 @@ button {
   font-family: var(--font-mono);
   font-size: 8px;
   color: var(--accent-neon-yellow);
+}
+
+/* Minimal Fuel Over Banner & Empty Tank Styles */
+.minimal-overlay-wrapper.fuel-over-active {
+  border-color: rgba(255, 0, 85, 0.4);
+}
+
+.minimal-fuel-over-banner {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.92), rgba(180, 0, 50, 0.95));
+  border: 1px solid #ff4d4d;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+  animation: pulse-banner-glow 0.8s infinite alternate ease-in-out;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.minimal-fuel-over-banner:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(255, 20, 100, 0.98), rgba(220, 0, 60, 0.98));
+  box-shadow: 0 0 30px rgba(255, 0, 85, 0.8);
+}
+
+.over-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.over-icon {
+  font-size: 20px;
+  animation: warning-bounce 0.3s ease infinite alternate;
+}
+
+.over-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.over-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.over-sub {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffeedd;
+}
+
+.over-action-btn {
+  background: #ffffff;
+  color: #cc0044;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.hero-fuel-empty {
+  border-color: rgba(255, 0, 85, 0.4) !important;
+  background: rgba(30, 5, 15, 0.4) !important;
+}
+
+.text-empty-flash {
+  animation: pulse-crit 0.4s infinite alternate;
+}
+
+.pulse-empty-flash {
+  animation: pulse-crit 0.4s infinite alternate;
+  background: #ff0055 !important;
+}
+
+.warning-pill.fuel-empty {
+  background: rgba(255, 0, 85, 0.95);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.8);
+  animation: warning-bounce 0.25s ease infinite alternate;
+}
+
+@keyframes pulse-banner-glow {
+  from { box-shadow: 0 0 12px rgba(255, 0, 85, 0.4); }
+  to { box-shadow: 0 0 25px rgba(255, 0, 85, 0.85); }
 }
 
 

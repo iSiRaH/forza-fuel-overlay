@@ -2,16 +2,18 @@ import React from 'react';
 
 interface WarningIndicatorProps {
   isShiftWarning: boolean;
+  isFuelEmpty?: boolean;
   isFuelLow: boolean;
   isFuelCritical: boolean;
 }
 
 export const WarningIndicator: React.FC<WarningIndicatorProps> = ({
   isShiftWarning,
+  isFuelEmpty,
   isFuelLow,
   isFuelCritical,
 }) => {
-  if (!isShiftWarning && !isFuelLow && !isFuelCritical) {
+  if (!isShiftWarning && !isFuelEmpty && !isFuelLow && !isFuelCritical) {
     return null;
   }
 
@@ -22,12 +24,17 @@ export const WarningIndicator: React.FC<WarningIndicatorProps> = ({
           ⚡ SHIFT UP ⚡
         </div>
       )}
-      {isFuelCritical && (
+      {isFuelEmpty && (
+        <div className="warning-pill fuel-empty">
+          🚨 OUT OF FUEL - ENGINE STALLED
+        </div>
+      )}
+      {!isFuelEmpty && isFuelCritical && (
         <div className="warning-pill fuel-critical">
           ⚠️ PIT THIS LAP - CRITICAL FUEL
         </div>
       )}
-      {!isFuelCritical && isFuelLow && (
+      {!isFuelEmpty && !isFuelCritical && isFuelLow && (
         <div className="warning-pill fuel-low">
           ⛽ LOW FUEL WARNING
         </div>
@@ -35,3 +42,4 @@ export const WarningIndicator: React.FC<WarningIndicatorProps> = ({
     </div>
   );
 };
+

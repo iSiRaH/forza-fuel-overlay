@@ -20,6 +20,7 @@ function createWindow() {
     hasShadow: false,
     skipTaskbar: false,
     focusable: true, // Must be true on Windows so mouse click events reach UI buttons
+    icon: path.join(__dirname, '../public/taskbar-icon.jpeg'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

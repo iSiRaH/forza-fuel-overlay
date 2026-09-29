@@ -8,6 +8,7 @@ import { RemainingLaps } from './components/RemainingLaps';
 import { WarningIndicator } from './components/WarningIndicator';
 import { FuelEmptyModal } from './components/FuelEmptyModal';
 import { MinimalFuelOverlay } from './components/MinimalFuelOverlay';
+import taskbarIcon from './assets/taskbar-icon.jpeg';
 import './App.css';
 
 export type UiMode = 'full' | 'minimal';
@@ -168,7 +169,7 @@ export function App() {
           {/* Header Bar */}
           <header className="overlay-header">
             <div className="brand">
-              <span className="logo-icon">🏎️</span>
+              <img src={taskbarIcon} alt="Taskbar Logo" className="logo-icon-img" />
               <div>
                 <div className="app-title-row">
                   <h1 className="app-title">FORZA FUEL OVERLAY</h1>

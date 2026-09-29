@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { formatGear } from '../../../../packages/shared/src/utils/gear.js';
 import type { SpeedUnit } from '../../../../packages/shared/src/utils/speed.js';
+import taskbarIcon from '../assets/taskbar-icon.jpeg';
 
 interface MinimalFuelOverlayProps {
   telemetry: any;
@@ -109,6 +110,7 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
       {/* Minimal Overlay Header */}
       <header className="minimal-header">
         <div className="minimal-brand">
+          <img src={taskbarIcon} alt="Taskbar Logo" className="minimal-logo-img" />
           <span className="minimal-status-dot" style={{ background: isConnected ? '#00f2fe' : '#ffaa00' }} />
           <span className="minimal-title">FH6 FUEL HUD</span>
           <div className="minimal-pi-badge" style={{ background: piBadgeBg, color: piBadgeColor }}>

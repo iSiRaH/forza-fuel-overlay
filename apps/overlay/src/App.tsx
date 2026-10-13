@@ -187,6 +187,27 @@ export function App() {
             </div>
 
             <div className="controls">
+              {/* Damage Overlay Switcher Button */}
+              <button
+                type="button"
+                className="mode-toggle-btn"
+                style={{
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  borderColor: 'rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                }}
+                onClick={() => {
+                  if (window.electronAPI?.toggleDamageOverlay) {
+                    window.electronAPI.toggleDamageOverlay();
+                  } else {
+                    window.open('/#damage', '_blank', 'width=400,height=540');
+                  }
+                }}
+                title="Toggle Simulation Damage Stats Overlay Window"
+              >
+                <span>💥 DAMAGE HUD</span>
+              </button>
+
               {/* UI Mode Switcher Button */}
               <button
                 type="button"

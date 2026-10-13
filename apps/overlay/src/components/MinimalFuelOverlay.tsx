@@ -274,6 +274,29 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
               </button>
             </div>
           </div>
+          <div className="drawer-row">
+            <span className="drawer-label">Damage HUD:</span>
+            <button
+              type="button"
+              className="minimal-action-btn"
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                background: 'rgba(56, 189, 248, 0.2)',
+                borderColor: 'rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+              }}
+              onClick={() => {
+                if (window.electronAPI?.toggleDamageOverlay) {
+                  window.electronAPI.toggleDamageOverlay();
+                } else {
+                  window.open('/#damage', '_blank', 'width=400,height=540');
+                }
+              }}
+            >
+              💥 Toggle Damage Window
+            </button>
+          </div>
           <div className="drawer-row text-muted">
             <span>Car: {carName}</span>
           </div>

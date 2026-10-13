@@ -22,6 +22,16 @@ export const FH6_OFFSETS = {
   pitch: 60, // float32
   roll: 64, // float32
 
+  normSuspensionTravelFL: 68, // float32
+  normSuspensionTravelFR: 72, // float32
+  normSuspensionTravelRL: 76, // float32
+  normSuspensionTravelRR: 80, // float32
+
+  wheelSlipRatioFL: 84, // float32
+  wheelSlipRatioFR: 88, // float32
+  wheelSlipRatioRL: 92, // float32
+  wheelSlipRatioRR: 96, // float32
+
   carOrdinal: 212, // int32
   carClass: 216, // int32
   carPerformanceIndex: 220, // int32
@@ -76,7 +86,14 @@ export const FH5_OFFSETS = {
   currentEngineRpm: 16,
   velocityX: 32,
   velocityY: 36,
-  velocityZ: 40,
+  normSuspensionTravelFL: 68,
+  normSuspensionTravelFR: 72,
+  normSuspensionTravelRL: 76,
+  normSuspensionTravelRR: 80,
+  wheelSlipRatioFL: 84,
+  wheelSlipRatioFR: 88,
+  wheelSlipRatioRL: 92,
+  wheelSlipRatioRR: 96,
   carOrdinal: 212,
   carClass: 216,
   carPerformanceIndex: 220,
@@ -86,6 +103,10 @@ export const FH5_OFFSETS = {
   speed: 244,
   power: 248,
   torque: 252,
+  tireTempFL: 256,
+  tireTempFR: 260,
+  tireTempRL: 264,
+  tireTempRR: 268,
   fuel: 276,
   distanceTraveled: 280,
   bestLap: 284,

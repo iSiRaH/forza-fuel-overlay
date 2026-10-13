@@ -26,6 +26,33 @@ export function parseForzaTelemetryPacket(
   const engineIdleRpm = buffer.readFloatLE(12);
   const currentEngineRpm = buffer.readFloatLE(16);
 
+  // Acceleration vectors (offsets 20, 24, 28)
+  const accelerationX = buffer.length >= 24 ? buffer.readFloatLE(20) : 0;
+  const accelerationY = buffer.length >= 28 ? buffer.readFloatLE(24) : 0;
+  const accelerationZ = buffer.length >= 32 ? buffer.readFloatLE(28) : 0;
+
+  // Normalized suspension travel (offsets 68, 72, 76, 80)
+  const suspensionTravelFL = buffer.length >= 72 ? buffer.readFloatLE(FH6_OFFSETS.normSuspensionTravelFL) : undefined;
+  const suspensionTravelFR = buffer.length >= 76 ? buffer.readFloatLE(FH6_OFFSETS.normSuspensionTravelFR) : undefined;
+  const suspensionTravelRL = buffer.length >= 80 ? buffer.readFloatLE(FH6_OFFSETS.normSuspensionTravelRL) : undefined;
+  const suspensionTravelRR = buffer.length >= 84 ? buffer.readFloatLE(FH6_OFFSETS.normSuspensionTravelRR) : undefined;
+
+  // Wheel slip ratios (offsets 84, 88, 92, 96)
+  const wheelSlipFL = buffer.length >= 88 ? buffer.readFloatLE(FH6_OFFSETS.wheelSlipRatioFL) : undefined;
+  const wheelSlipFR = buffer.length >= 92 ? buffer.readFloatLE(FH6_OFFSETS.wheelSlipRatioFR) : undefined;
+  const wheelSlipRL = buffer.length >= 96 ? buffer.readFloatLE(FH6_OFFSETS.wheelSlipRatioRL) : undefined;
+  const wheelSlipRR = buffer.length >= 100 ? buffer.readFloatLE(FH6_OFFSETS.wheelSlipRatioRR) : undefined;
+
+  let tireTempFL: number | undefined;
+  let tireTempFR: number | undefined;
+  let tireTempRL: number | undefined;
+  let tireTempRR: number | undefined;
+
+  let tireWearFL: number | undefined;
+  let tireWearFR: number | undefined;
+  let tireWearRL: number | undefined;
+  let tireWearRR: number | undefined;
+
   // Velocity vectors (offsets 32, 36, 40)
   const velocityX = buffer.length >= 36 ? buffer.readFloatLE(32) : 0;
   const velocityY = buffer.length >= 40 ? buffer.readFloatLE(36) : 0;
@@ -94,6 +121,18 @@ export function parseForzaTelemetryPacket(
     gear = decodeGear(rawGear);
 
     steer = buffer.readInt8(FH6_OFFSETS.steering);
+
+    tireTempFL = buffer.readFloatLE(FH6_OFFSETS.tireTempFL);
+    tireTempFR = buffer.readFloatLE(FH6_OFFSETS.tireTempFR);
+    tireTempRL = buffer.readFloatLE(FH6_OFFSETS.tireTempRL);
+    tireTempRR = buffer.readFloatLE(FH6_OFFSETS.tireTempRR);
+
+    if (buffer.length >= 331) {
+      const rawWearFL = buffer.readFloatLE(323);
+      if (!isNaN(rawWearFL) && rawWearFL >= 0 && rawWearFL <= 1) {
+        tireWearFL = rawWearFL;
+      }
+    }
   } else if (buffer.length === 323) {
     // ------------------------------------------------------------------------
     // Legacy FH5 Car Dash Packet Layout (323 bytes)
@@ -127,6 +166,11 @@ export function parseForzaTelemetryPacket(
     else gear = legacyRawGear - 1; // 1st, 2nd, etc.
 
     steer = buffer.readInt8(FH5_OFFSETS.steering);
+
+    tireTempFL = buffer.readFloatLE(FH5_OFFSETS.tireTempFL);
+    tireTempFR = buffer.readFloatLE(FH5_OFFSETS.tireTempFR);
+    tireTempRL = buffer.readFloatLE(FH5_OFFSETS.tireTempRL);
+    tireTempRR = buffer.readFloatLE(FH5_OFFSETS.tireTempRR);
   } else if (buffer.length >= 232) {
     // ------------------------------------------------------------------------
     // Sled Mode Fallback (232-byte packet)
@@ -212,6 +256,25 @@ export function parseForzaTelemetryPacket(
     piRating: piInfo.piRating,
     piBadgeColor: piInfo.badgeColor,
     piBadgeBg: piInfo.badgeBg,
+    accelerationX,
+    accelerationY,
+    accelerationZ,
+    suspensionTravelFL,
+    suspensionTravelFR,
+    suspensionTravelRL,
+    suspensionTravelRR,
+    wheelSlipFL,
+    wheelSlipFR,
+    wheelSlipRL,
+    wheelSlipRR,
+    tireTempFL,
+    tireTempFR,
+    tireTempRL,
+    tireTempRR,
+    tireWearFL,
+    tireWearFR,
+    tireWearRL,
+    tireWearRR,
   };
 
   debugLogTelemetry(buffer, parsedData);

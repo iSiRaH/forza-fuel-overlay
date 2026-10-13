@@ -179,6 +179,21 @@ export class MockTelemetryGenerator {
       piRating: piInfo.piRating,
       piBadgeColor: piInfo.badgeColor,
       piBadgeBg: piInfo.badgeBg,
+      tireTempFL: 92.5 + Math.sin(this.timestampMS / 1000) * 4,
+      tireTempFR: 95.1 + Math.sin(this.timestampMS / 1200) * 5,
+      tireTempRL: 88.0 + Math.sin(this.timestampMS / 1500) * 3,
+      tireTempRR: 89.4 + Math.sin(this.timestampMS / 1400) * 3,
+      tireWearFL: 0.14,
+      tireWearFR: 0.18,
+      tireWearRL: 0.09,
+      tireWearRR: 0.11,
+      suspensionTravelFL: 0.45 + (this.accel / 255) * 0.1,
+      suspensionTravelFR: 0.45 + (this.accel / 255) * 0.1,
+      suspensionTravelRL: 0.52 - (this.accel / 255) * 0.1,
+      suspensionTravelRR: 0.52 - (this.accel / 255) * 0.1,
+      accelerationX: this.steer * 0.1,
+      accelerationY: 0,
+      accelerationZ: (this.accel - this.brake) / 25.5,
     };
 
     if (this.onData) {

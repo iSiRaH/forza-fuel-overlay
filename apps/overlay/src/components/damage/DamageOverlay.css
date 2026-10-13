@@ -1,0 +1,494 @@
+/* ==========================================================================
+   SIMULATION DAMAGE OVERLAY - HUD STYLING
+   ========================================================================== */
+
+:root {
+  --dmg-bg: rgba(12, 17, 29, 0.88);
+  --dmg-bg-header: rgba(17, 24, 39, 0.95);
+  --dmg-border: rgba(56, 189, 248, 0.25);
+  --dmg-border-glow: rgba(56, 189, 248, 0.4);
+  --dmg-text-main: #f8fafc;
+  --dmg-text-muted: #94a3b8;
+  --dmg-text-subtle: #64748b;
+
+  --dmg-color-healthy: #00e5ff;
+  --dmg-color-healthy-bg: rgba(0, 229, 255, 0.12);
+  --dmg-color-minor: #38bdf8;
+  --dmg-color-minor-bg: rgba(56, 189, 248, 0.12);
+  --dmg-color-moderate: #f59e0b;
+  --dmg-color-moderate-bg: rgba(245, 158, 11, 0.15);
+  --dmg-color-severe: #f97316;
+  --dmg-color-severe-bg: rgba(249, 115, 22, 0.18);
+  --dmg-color-critical: #ef4444;
+  --dmg-color-critical-bg: rgba(239, 68, 68, 0.22);
+  --dmg-color-unavailable: #475569;
+  --dmg-color-unavailable-bg: rgba(71, 85, 105, 0.12);
+}
+
+.damage-overlay-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  background: var(--dmg-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--dmg-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.08);
+  color: var(--dmg-text-main);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+  user-select: none;
+  overflow: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Header bar */
+.dmg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--dmg-bg-header);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-app-region: drag; /* Draggable window titlebar */
+}
+
+.dmg-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dmg-title-icon {
+  font-size: 16px;
+}
+
+.dmg-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #f1f5f9;
+}
+
+.dmg-status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--dmg-color-healthy);
+  box-shadow: 0 0 8px var(--dmg-color-healthy);
+  animation: pulse-dot 2s infinite;
+}
+
+.dmg-status-dot.offline {
+  background-color: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: none;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.dmg-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.dmg-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.dmg-icon-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--dmg-text-muted);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dmg-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dmg-icon-btn.active {
+  background: var(--dmg-color-healthy-bg);
+  color: var(--dmg-color-healthy);
+  border-color: var(--dmg-color-healthy);
+}
+
+/* Overall condition card */
+.dmg-overall-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dmg-overall-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dmg-overall-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--dmg-text-subtle);
+  font-weight: 700;
+}
+
+.dmg-overall-status {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.dmg-telemetry-tag {
+  font-size: 9.5px;
+  color: var(--dmg-text-subtle);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.dmg-overall-gauge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dmg-gauge-value {
+  font-size: 16px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Component damage list */
+.dmg-component-list {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.dmg-component-list::-webkit-scrollbar {
+  width: 4px;
+}
+.dmg-component-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+.dmg-component-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+/* Individual component item */
+.dmg-component-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dmg-component-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dmg-component-item.unavailable {
+  opacity: 0.65;
+}
+
+.dmg-component-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dmg-comp-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dmg-comp-icon {
+  font-size: 13px;
+}
+
+.dmg-comp-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.dmg-comp-value-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dmg-comp-severity-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.dmg-comp-pct {
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Progress bar */
+.dmg-progress-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dmg-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease-out, background-color 0.3s ease;
+}
+
+/* Tire 4-corner grid */
+.dmg-tire-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dmg-tire-corner {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dmg-tire-corner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--dmg-text-muted);
+}
+
+.dmg-tire-temp {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--dmg-color-minor);
+  font-variant-numeric: tabular-nums;
+}
+
+.dmg-tire-wear-val {
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Severity styles */
+.sev-healthy {
+  color: var(--dmg-color-healthy);
+  border-color: rgba(0, 229, 255, 0.3);
+}
+.sev-healthy-bg {
+  background: var(--dmg-color-healthy-bg);
+  color: var(--dmg-color-healthy);
+}
+.fill-healthy {
+  background: linear-gradient(90deg, #00b4d8, var(--dmg-color-healthy));
+}
+
+.sev-minor {
+  color: var(--dmg-color-minor);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.sev-minor-bg {
+  background: var(--dmg-color-minor-bg);
+  color: var(--dmg-color-minor);
+}
+.fill-minor {
+  background: linear-gradient(90deg, #38bdf8, #60a5fa);
+}
+
+.sev-moderate {
+  color: var(--dmg-color-moderate);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+.sev-moderate-bg {
+  background: var(--dmg-color-moderate-bg);
+  color: var(--dmg-color-moderate);
+}
+.fill-moderate {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.sev-severe {
+  color: var(--dmg-color-severe);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+.sev-severe-bg {
+  background: var(--dmg-color-severe-bg);
+  color: var(--dmg-color-severe);
+}
+.fill-severe {
+  background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.sev-critical {
+  color: var(--dmg-color-critical);
+  border-color: rgba(239, 68, 68, 0.5);
+  animation: pulse-critical 1.5s infinite;
+}
+.sev-critical-bg {
+  background: var(--dmg-color-critical-bg);
+  color: var(--dmg-color-critical);
+}
+.fill-critical {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+@keyframes pulse-critical {
+  0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+}
+
+.sev-unavailable {
+  color: var(--dmg-color-unavailable);
+}
+.sev-unavailable-bg {
+  background: var(--dmg-color-unavailable-bg);
+  color: #94a3b8;
+}
+.fill-unavailable {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Compact HUD mode */
+.dmg-compact-root {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  background: var(--dmg-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--dmg-border);
+  border-radius: 10px;
+  gap: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  -webkit-app-region: drag;
+}
+
+.dmg-compact-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dmg-compact-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dmg-compact-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Settings modal inside damage overlay */
+.dmg-settings-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 15, 26, 0.96);
+  backdrop-filter: blur(20px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.dmg-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.dmg-settings-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.dmg-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.dmg-slider {
+  accent-color: var(--dmg-color-healthy);
+  width: 120px;
+  cursor: pointer;
+}

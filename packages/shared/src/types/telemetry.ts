@@ -38,4 +38,35 @@ export interface ForzaTelemetryData {
   piRating?: number | undefined;
   piBadgeColor?: string | undefined;
   piBadgeBg?: string | undefined;
+
+  // Wheel dynamics & physical metrics
+  tireTempFL?: number | undefined;
+  tireTempFR?: number | undefined;
+  tireTempRL?: number | undefined;
+  tireTempRR?: number | undefined;
+  suspensionTravelFL?: number | undefined;
+  suspensionTravelFR?: number | undefined;
+  suspensionTravelRL?: number | undefined;
+  suspensionTravelRR?: number | undefined;
+  wheelSlipFL?: number | undefined;
+  wheelSlipFR?: number | undefined;
+  wheelSlipRL?: number | undefined;
+  wheelSlipRR?: number | undefined;
+  tireWearFL?: number | undefined; // 0.0 - 1.0 or 0-100%
+  tireWearFR?: number | undefined;
+  tireWearRL?: number | undefined;
+  tireWearRR?: number | undefined;
+  accelerationX?: number | undefined;
+  accelerationY?: number | undefined;
+  accelerationZ?: number | undefined;
+
+  // Optional direct damage fields (from extended telemetry packets/bridges)
+  engineDamagePct?: number | undefined;
+  transmissionDamagePct?: number | undefined;
+  suspensionDamagePct?: number | undefined;
+  brakesDamagePct?: number | undefined;
+  tiresDamagePct?: number | undefined;
+  steeringDamagePct?: number | undefined;
+  chassisDamagePct?: number | undefined;
 }
+

@@ -124,6 +124,19 @@ export const FH5_OFFSETS = {
 } as const;
 
 /**
+ * Forza Motorsport (2023) Car Dash format offsets (331 bytes).
+ * Standard Motorsport/FH5 layout extended with native tire wear and track data.
+ */
+export const FM2023_OFFSETS = {
+  ...FH5_OFFSETS,
+  tireWearFL: 311, // float32 (0.0 to 1.0)
+  tireWearFR: 315, // float32 (0.0 to 1.0)
+  tireWearRL: 319, // float32 (0.0 to 1.0)
+  tireWearRR: 323, // float32 (0.0 to 1.0)
+  trackOrdinal: 327, // int32
+} as const;
+
+/**
  * Minimal Sled format offsets (232 bytes).
  */
 export const SLED_OFFSETS = {

@@ -87,7 +87,7 @@ describe('Simulation Damage Calculator (Interpretation Module)', () => {
   });
 
   it('should NOT invent percentages when telemetry does not expose component damage (Real game telemetry)', () => {
-    const result = calculateDamage(realGamePacketFixture, true);
+    const result = calculateDamage(realGamePacketFixture, true, { enableClientFallback: false });
 
     // Verify transmission, brakes, steering, and chassis are marked UNAVAILABLE, not 0%
     assert.equal(result.components.transmission.isAvailable, false);

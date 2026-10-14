@@ -7,6 +7,8 @@ import type {
   VehicleDamageSummary,
 } from '../../../../packages/shared/src/types/damage.js';
 
+import { DamageTracker } from '../../../../packages/shared/src/damage/damageTracker.js';
+
 export const DEFAULT_DAMAGE_THRESHOLDS: DamageThresholds = {
   minorMax: 19,
   moderateMax: 49,
@@ -18,6 +20,22 @@ export interface DamageCalculatorOptions {
   thresholds?: DamageThresholds;
   staleTimeoutMs?: number;
   now?: number;
+  enableClientFallback?: boolean;
+}
+
+export const fallbackDamageTracker = new DamageTracker();
+
+/**
+ * Normalizes tire temperatures to Celsius.
+ * In Forza UDP Data Out, raw temperatures are output in Fahrenheit (typically 70°F - 300°F).
+ * If the value is > 130, it is guaranteed to be in Fahrenheit and is converted to Celsius.
+ */
+export function normalizeTireTemp(val: number | null | undefined): number | null {
+  if (val === null || val === undefined || isNaN(val)) return null;
+  if (val > 130) {
+    return Math.round(((val - 32) * (5 / 9)) * 10) / 10;
+  }
+  return Math.round(val * 10) / 10;
 }
 
 /**
@@ -130,8 +148,38 @@ export function calculateDamage(
   // Check staleness (if timestamp has not been provided or is 0)
   const isStale = telemetry.isRaceOn === false && (telemetry.speed ?? 0) === 0;
 
+  let activeTelemetry: Partial<ForzaTelemetryData> = telemetry;
+
+  const enableClientFallback = options.enableClientFallback ?? true;
+
+  // If enabled and any damage fields are not present in the incoming packet, run client fallback tracker
+  if (
+    enableClientFallback &&
+    (telemetry.engineDamagePct === undefined ||
+     telemetry.tiresDamagePct === undefined ||
+     telemetry.transmissionDamagePct === undefined ||
+     telemetry.suspensionDamagePct === undefined ||
+     telemetry.brakesDamagePct === undefined)
+  ) {
+    const tracked = fallbackDamageTracker.processTelemetry(telemetry as any);
+    activeTelemetry = {
+      ...telemetry,
+      engineDamagePct: telemetry.engineDamagePct ?? tracked.engineDamagePct,
+      transmissionDamagePct: telemetry.transmissionDamagePct ?? tracked.transmissionDamagePct,
+      suspensionDamagePct: telemetry.suspensionDamagePct ?? tracked.suspensionDamagePct,
+      brakesDamagePct: telemetry.brakesDamagePct ?? tracked.brakesDamagePct,
+      tiresDamagePct: telemetry.tiresDamagePct ?? tracked.tiresDamagePct,
+      tireWearFL: telemetry.tireWearFL ?? tracked.tireWearFL,
+      tireWearFR: telemetry.tireWearFR ?? tracked.tireWearFR,
+      tireWearRL: telemetry.tireWearRL ?? tracked.tireWearRL,
+      tireWearRR: telemetry.tireWearRR ?? tracked.tireWearRR,
+      steeringDamagePct: telemetry.steeringDamagePct ?? tracked.steeringDamagePct,
+      chassisDamagePct: telemetry.chassisDamagePct ?? tracked.chassisDamagePct,
+    };
+  }
+
   // 1. ENGINE DAMAGE
-  const rawEngineDamage = normalizeDamagePercent(telemetry.engineDamagePct);
+  const rawEngineDamage = normalizeDamagePercent(activeTelemetry.engineDamagePct);
   let engineSeverity: DamageSeverity = 'unavailable';
   let engineDamagePct: number | null = null;
   let isEngineAvailable = false;
@@ -166,7 +214,7 @@ export function calculateDamage(
   };
 
   // 2. TRANSMISSION DAMAGE
-  const rawTransDamage = normalizeDamagePercent(telemetry.transmissionDamagePct);
+  const rawTransDamage = normalizeDamagePercent(activeTelemetry.transmissionDamagePct);
   const isTransAvailable = rawTransDamage !== null;
   const transDamagePct = isTransAvailable ? rawTransDamage : null;
   const transSeverity = mapDamageSeverity(transDamagePct, thresholds);
@@ -182,7 +230,7 @@ export function calculateDamage(
   };
 
   // 3. SUSPENSION DAMAGE
-  const rawSuspDamage = normalizeDamagePercent(telemetry.suspensionDamagePct);
+  const rawSuspDamage = normalizeDamagePercent(activeTelemetry.suspensionDamagePct);
   let isSuspAvailable = false;
   let suspDamagePct: number | null = null;
   let suspSeverity: DamageSeverity = 'unavailable';
@@ -230,7 +278,7 @@ export function calculateDamage(
   };
 
   // 4. BRAKES DAMAGE
-  const rawBrakesDamage = normalizeDamagePercent(telemetry.brakesDamagePct);
+  const rawBrakesDamage = normalizeDamagePercent(activeTelemetry.brakesDamagePct);
   const isBrakesAvailable = rawBrakesDamage !== null;
   const brakesDamagePct = isBrakesAvailable ? rawBrakesDamage : null;
   const brakesSeverity = mapDamageSeverity(brakesDamagePct, thresholds);
@@ -248,10 +296,10 @@ export function calculateDamage(
   // 5. TIRES DAMAGE
   // Check 4-corner tire wear or overall tire damage
   const rawWearCorners = {
-    fl: normalizeDamagePercent(telemetry.tireWearFL),
-    fr: normalizeDamagePercent(telemetry.tireWearFR),
-    rl: normalizeDamagePercent(telemetry.tireWearRL),
-    rr: normalizeDamagePercent(telemetry.tireWearRR),
+    fl: normalizeDamagePercent(activeTelemetry.tireWearFL),
+    fr: normalizeDamagePercent(activeTelemetry.tireWearFR),
+    rl: normalizeDamagePercent(activeTelemetry.tireWearRL),
+    rr: normalizeDamagePercent(activeTelemetry.tireWearRR),
   };
 
   const hasCornerWear =
@@ -260,7 +308,7 @@ export function calculateDamage(
     rawWearCorners.rl !== null ||
     rawWearCorners.rr !== null;
 
-  const rawOverallTireDamage = normalizeDamagePercent(telemetry.tiresDamagePct);
+  const rawOverallTireDamage = normalizeDamagePercent(activeTelemetry.tiresDamagePct);
 
   let tiresDamagePct: number | null = null;
   let isTiresAvailable = false;
@@ -312,7 +360,7 @@ export function calculateDamage(
   };
 
   // 6. STEERING DAMAGE
-  const rawSteeringDamage = normalizeDamagePercent(telemetry.steeringDamagePct);
+  const rawSteeringDamage = normalizeDamagePercent(activeTelemetry.steeringDamagePct);
   const isSteeringAvailable = rawSteeringDamage !== null;
   const steeringDamagePct = isSteeringAvailable ? rawSteeringDamage : null;
   const steeringSeverity = mapDamageSeverity(steeringDamagePct, thresholds);
@@ -328,7 +376,7 @@ export function calculateDamage(
   };
 
   // 7. CHASSIS / BODY DAMAGE
-  const rawChassisDamage = normalizeDamagePercent(telemetry.chassisDamagePct);
+  const rawChassisDamage = normalizeDamagePercent(activeTelemetry.chassisDamagePct);
   const isChassisAvailable = rawChassisDamage !== null;
   const chassisDamagePct = isChassisAvailable ? rawChassisDamage : null;
   const chassisSeverity = mapDamageSeverity(chassisDamagePct, thresholds);
@@ -381,26 +429,26 @@ export function calculateDamage(
     }
   }
 
-  // Build corner detail for tires
+  // Build corner detail for tires with normalized Celsius temperatures
   const tiresCornerDetail = {
     fl: {
       wear: rawWearCorners.fl,
-      temp: tireTemps.fl ?? null,
+      temp: normalizeTireTemp(tireTemps.fl),
       severity: mapDamageSeverity(rawWearCorners.fl, thresholds),
     },
     fr: {
       wear: rawWearCorners.fr,
-      temp: tireTemps.fr ?? null,
+      temp: normalizeTireTemp(tireTemps.fr),
       severity: mapDamageSeverity(rawWearCorners.fr, thresholds),
     },
     rl: {
       wear: rawWearCorners.rl,
-      temp: tireTemps.rl ?? null,
+      temp: normalizeTireTemp(tireTemps.rl),
       severity: mapDamageSeverity(rawWearCorners.rl, thresholds),
     },
     rr: {
       wear: rawWearCorners.rr,
-      temp: tireTemps.rr ?? null,
+      temp: normalizeTireTemp(tireTemps.rr),
       severity: mapDamageSeverity(rawWearCorners.rr, thresholds),
     },
   };

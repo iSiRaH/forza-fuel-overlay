@@ -22,6 +22,6 @@ export interface FuelCalculationResult {
 }
 
 export interface TelemetryControlMessage {
-  type: 'REFILL_FUEL' | 'RESET_SESSION' | 'SET_TANK_CAPACITY' | 'SET_PAUSED';
+  type: 'REFILL_FUEL' | 'RESET_SESSION' | 'SET_TANK_CAPACITY' | 'SET_PAUSED' | 'RESET_DAMAGE';
   payload?: Record<string, unknown>;
 }

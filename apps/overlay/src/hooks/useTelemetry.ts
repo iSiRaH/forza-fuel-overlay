@@ -248,5 +248,7 @@ export function useTelemetry(options: UseTelemetryOptions = {}) {
     togglePauseFuelTask,
     showEmptyModal: isModalOpen,
     dismissEmptyModal,
+    sendControlMessage,
+    resetDamage: () => sendControlMessage({ type: 'RESET_DAMAGE' }),
   };
 }

@@ -43,9 +43,9 @@ export const DamageOverlay: React.FC = () => {
     }
   }, [settings]);
 
-  // Interpret damage state purely and deterministically
+  // Interpret damage state purely and deterministically with active tracking fallback
   const damageSummary = useMemo(() => {
-    return calculateDamage(telemetry, isConnected);
+    return calculateDamage(telemetry, isConnected, { enableClientFallback: true });
   }, [telemetry, isConnected]);
 
   // Global hotkey 'C' listener to toggle between compact and expanded HUD

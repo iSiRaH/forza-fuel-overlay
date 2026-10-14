@@ -59,6 +59,12 @@ export interface ForzaTelemetryData {
   accelerationX?: number | undefined;
   accelerationY?: number | undefined;
   accelerationZ?: number | undefined;
+  yaw?: number | undefined;
+  pitch?: number | undefined;
+  roll?: number | undefined;
+  positionX?: number | undefined;
+  positionY?: number | undefined;
+  positionZ?: number | undefined;
 
   // Optional direct damage fields (from extended telemetry packets/bridges)
   engineDamagePct?: number | undefined;

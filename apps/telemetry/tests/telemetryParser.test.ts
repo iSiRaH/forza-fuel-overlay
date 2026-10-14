@@ -151,4 +151,80 @@ describe('Forza UDP Telemetry Packet Parser (FH6 324-byte & Legacy Formats)', ()
     assert.equal(parsed.currentEngineRpm, 4500);
     assert.equal(parsed.speed, 30);
   });
+
+  it('should accurately convert tire temperatures from raw Forza Fahrenheit to Celsius', () => {
+    const packet = Buffer.alloc(324);
+    packet.writeInt32LE(1, 0);
+
+    // Write Fahrenheit temperatures: 224°F, 230°F, 228°F, 228°F
+    packet.writeFloatLE(224.0, 268); // tireTempFL
+    packet.writeFloatLE(230.0, 272); // tireTempFR
+    packet.writeFloatLE(228.0, 276); // tireTempRL
+    packet.writeFloatLE(228.0, 280); // tireTempRR
+
+    const parsed = parseForzaTelemetryPacket(packet);
+
+    // 224°F = (224 - 32) * 5/9 = 106.7°C
+    // 230°F = (230 - 32) * 5/9 = 110.0°C
+    // 228°F = (228 - 32) * 5/9 = 108.9°C
+    assert.equal(parsed.tireTempFL, 106.7);
+    assert.equal(parsed.tireTempFR, 110.0);
+    assert.equal(parsed.tireTempRL, 108.9);
+    assert.equal(parsed.tireTempRR, 108.9);
+  });
+
+  it('should attach live simulation damage metrics to parsed telemetry packets', () => {
+    const packet = Buffer.alloc(324);
+    packet.writeInt32LE(1, 0);
+    packet.writeUInt32LE(1000, 4);
+
+    const parsed = parseForzaTelemetryPacket(packet);
+
+    assert.ok(parsed.engineDamagePct !== undefined);
+    assert.ok(parsed.transmissionDamagePct !== undefined);
+    assert.ok(parsed.suspensionDamagePct !== undefined);
+    assert.ok(parsed.brakesDamagePct !== undefined);
+    assert.ok(parsed.tiresDamagePct !== undefined);
+    assert.ok(parsed.steeringDamagePct !== undefined);
+    assert.ok(parsed.chassisDamagePct !== undefined);
+  });
+
+  it('should correctly parse 331-byte Forza Motorsport (2023) packets with native tire wear', () => {
+    const packet = Buffer.alloc(331);
+    packet.writeInt32LE(1, 0); // isRaceOn
+    packet.writeUInt32LE(12000, 4); // timestampMS
+    packet.writeFloatLE(7000, 16); // currentEngineRpm
+    packet.writeFloatLE(45.5, 244); // speed (m/s)
+    packet.writeFloatLE(224.0, 256); // tireTempFL (Fahrenheit)
+    packet.writeFloatLE(230.0, 260); // tireTempFR
+    packet.writeFloatLE(228.0, 264); // tireTempRL
+    packet.writeFloatLE(228.0, 268); // tireTempRR
+
+    // FM2023 native tire wear at offsets 311, 315, 319, 323 (0.0 to 1.0)
+    packet.writeFloatLE(0.138, 311); // FL = 13.8%
+    packet.writeFloatLE(0.433, 315); // FR = 43.3%
+    packet.writeFloatLE(0.104, 319); // RL = 10.4%
+    packet.writeFloatLE(0.221, 323); // RR = 22.1%
+    packet.writeInt32LE(105, 327); // trackOrdinal
+
+    const parsed = parseForzaTelemetryPacket(packet);
+
+    assert.equal(parsed.isRaceOn, true);
+    assert.equal(parsed.speed, 45.5);
+    assert.equal(parsed.tireTempFL, 106.7); // converted to Celsius
+
+    // Verify native tire wear is extracted cleanly from telemetry
+    assert.ok(parsed.tireWearFL !== undefined);
+    assert.ok(Math.abs(parsed.tireWearFL - 13.8) < 0.2);
+    assert.ok(parsed.tireWearFR !== undefined);
+    assert.ok(Math.abs(parsed.tireWearFR - 43.3) < 0.2);
+    assert.ok(parsed.tireWearRL !== undefined);
+    assert.ok(Math.abs(parsed.tireWearRL - 10.4) < 0.2);
+    assert.ok(parsed.tireWearRR !== undefined);
+    assert.ok(Math.abs(parsed.tireWearRR - 22.1) < 0.2);
+
+    // Max tire wear should be 43.3%
+    assert.ok(Math.abs((parsed.tiresDamagePct ?? 0) - 43.3) < 0.2);
+  });
 });
+

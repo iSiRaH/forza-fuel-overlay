@@ -4,3 +4,4 @@ export * from './types/damage.js';
 export * from './utils/speed.js';
 export * from './utils/carDatabase.js';
 export * from './utils/gear.js';
+export * from './damage/damageTracker.js';

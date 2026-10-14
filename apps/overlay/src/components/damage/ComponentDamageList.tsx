@@ -146,7 +146,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, tiresCornerDet
                   <span>{cornerLabel}</span>
                   {cornerData.temp !== null && (
                     <span className="dmg-tire-temp">
-                      {Math.round(cornerData.temp)}°C
+                      {Math.round(cornerData.temp > 130 ? ((cornerData.temp - 32) * 5) / 9 : cornerData.temp)}°C
                     </span>
                   )}
                 </div>

@@ -141,11 +141,13 @@ export class DamageTracker {
     const speed = Math.max(0, input.speed ?? 0);
     const distance = Math.max(0, input.distanceTraveled ?? 0);
 
-    // 1. Detect Car Switch
-    if (this.lastCarOrdinal !== null && carOrdinal !== 0 && carOrdinal !== this.lastCarOrdinal) {
-      this.reset();
+    // 1. Detect Car Switch (only track non-zero valid car ordinals to avoid resetting on menu/pause)
+    if (carOrdinal > 0) {
+      if (this.lastCarOrdinal !== null && carOrdinal !== this.lastCarOrdinal) {
+        this.reset();
+      }
+      this.lastCarOrdinal = carOrdinal;
     }
-    this.lastCarOrdinal = carOrdinal;
 
     // 2. Detect In-Game Car Respawn / Reset Car Position
     // A: Position Teleportation (car instantly moved to track spawn point)
@@ -159,16 +161,15 @@ export class DamageTracker {
       const dy = input.positionY - this.lastPositionY;
       const dz = input.positionZ - this.lastPositionZ;
       const distJump = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      const maxPossibleDistInDt = Math.max(speed, 6) * 0.05 + 2.5;
+      const maxPossibleDistInDt = Math.max(speed, 10) * 0.1 + 10.0;
 
-      // When the car teleports > 2.5 meters in a single frame while stationary or nearly stopped
-      if (distJump > 2.5 && (distJump > maxPossibleDistInDt || speed < 3.0)) {
+      // When the car teleports > 35 meters in a single frame (track spawn, fast travel)
+      if (distJump > 35 && distJump > maxPossibleDistInDt) {
         this.reset();
         this.lastPositionX = input.positionX;
         this.lastPositionY = input.positionY;
         this.lastPositionZ = input.positionZ;
         this.hasLastPosition = true;
-        this.lastIsRaceOn = isRaceOn;
         return { ...this.state };
       }
       this.lastPositionX = input.positionX;
@@ -185,15 +186,35 @@ export class DamageTracker {
       this.hasLastPosition = true;
     }
 
-    // B: Pause Menu "Reset Car Position" (Transition from pause menu back into game with car placed stationary)
-    if (this.lastIsRaceOn === false && isRaceOn === true) {
-      if (speed < 0.5 && (input.accel ?? 0) === 0 && (input.brake ?? 0) === 0) {
-        this.reset();
-        this.lastIsRaceOn = isRaceOn;
-        return { ...this.state };
-      }
-    }
+    // B: Pause Menu & Unpause handling
+    const justResumedFromPause = this.lastIsRaceOn === false && isRaceOn === true;
     this.lastIsRaceOn = isRaceOn;
+
+    // When the game is currently paused, freeze wear and rebase tracking
+    if (!isRaceOn) {
+      if (input.positionX !== undefined) this.lastPositionX = input.positionX;
+      if (input.positionY !== undefined) this.lastPositionY = input.positionY;
+      if (input.positionZ !== undefined) this.lastPositionZ = input.positionZ;
+      this.lastTimestampMS = timestampMS;
+      this.lastDistance = distance;
+      this.lastAccelX = input.accelerationX ?? 0;
+      this.lastAccelY = input.accelerationY ?? 0;
+      this.lastAccelZ = input.accelerationZ ?? 0;
+      return { ...this.state };
+    }
+
+    // When player just resumed from pause menu, rebase baselines without resetting damage
+    if (justResumedFromPause) {
+      if (input.positionX !== undefined) this.lastPositionX = input.positionX;
+      if (input.positionY !== undefined) this.lastPositionY = input.positionY;
+      if (input.positionZ !== undefined) this.lastPositionZ = input.positionZ;
+      this.lastTimestampMS = timestampMS;
+      this.lastDistance = distance;
+      this.lastAccelX = input.accelerationX ?? 0;
+      this.lastAccelY = input.accelerationY ?? 0;
+      this.lastAccelZ = input.accelerationZ ?? 0;
+      return { ...this.state };
+    }
 
     // C: Vehicle Rollover / Inversion Respawn (Car was upside down and game respawned it upright)
     const roll = Math.abs(input.roll ?? 0);
@@ -333,6 +354,12 @@ export class DamageTracker {
           const curbHitDamage = (Math.abs(dAy) - 12) * 0.035;
           this.state.suspensionDamagePct = Math.min(100, this.state.suspensionDamagePct + curbHitDamage);
         }
+
+        // Crash impact shock bending suspension wishbones / struts
+        if (shockMagnitudeG > 3.5) {
+          const suspShockDamage = (shockMagnitudeG - 3.5) * 0.5;
+          this.state.suspensionDamagePct = Math.min(100, this.state.suspensionDamagePct + suspShockDamage);
+        }
       }
 
       // ----------------------------------------------------------------------
@@ -340,10 +367,14 @@ export class DamageTracker {
       // ----------------------------------------------------------------------
       if (input.steeringDamagePct === undefined) {
         const steerInput = Math.abs(input.steer ?? 0);
-        // Impact while cornering or lateral impact
-        if (shockMagnitudeG > 3.5) {
-          if (steerInput > 15 || Math.abs(dAx / 9.81) > 2.0) {
-            const steerShockDamage = (shockMagnitudeG - 3.5) * 1.2;
+        // Impact shock to steering linkages and tie rods
+        if (shockMagnitudeG > 3.0) {
+          const forwardOrLateralShockG = Math.sqrt(dAx * dAx + Math.min(0, dAz) * Math.min(0, dAz)) / 9.81;
+          if (forwardOrLateralShockG > 2.0) {
+            const steerShockDamage = (forwardOrLateralShockG - 2.0) * 1.8;
+            this.state.steeringDamagePct = Math.min(100, this.state.steeringDamagePct + steerShockDamage);
+          } else if (steerInput > 15 || Math.abs(dAx / 9.81) > 1.5) {
+            const steerShockDamage = (shockMagnitudeG - 3.0) * 1.2;
             this.state.steeringDamagePct = Math.min(100, this.state.steeringDamagePct + steerShockDamage);
           }
         }
@@ -363,6 +394,12 @@ export class DamageTracker {
         const maxRpm = input.engineMaxRpm ?? 7000;
         const accelRaw = input.accel ?? 0;
         const clutchRaw = input.clutch ?? 0;
+
+        // Collision shock to drivetrain / transmission
+        if (shockMagnitudeG > 3.8) {
+          const transShock = (shockMagnitudeG - 3.8) * 0.45;
+          this.state.transmissionDamagePct = Math.min(100, this.state.transmissionDamagePct + transShock);
+        }
 
         // Shift shock detection
         if (this.lastGear !== undefined && currentGear !== undefined && currentGear !== this.lastGear) {
@@ -394,9 +431,10 @@ export class DamageTracker {
           const overRevSeverity = (currentRpm - maxRpm * 1.02) / (maxRpm * 0.15);
           this.state.engineDamagePct = Math.min(100, this.state.engineDamagePct + overRevSeverity * 1.5 * dt);
         }
-        // Severe front collision into engine bay
-        if (dAz < -5.5 * 9.81) {
-          const frontImpact = (Math.abs(dAz / 9.81) - 5.5) * 1.5;
+        // Front collision into engine bay
+        if (dAz < -2.5 * 9.81) {
+          const frontImpactG = Math.abs(dAz / 9.81) - 2.5;
+          const frontImpact = frontImpactG * 1.6;
           this.state.engineDamagePct = Math.min(100, this.state.engineDamagePct + frontImpact);
         }
         // Sustained redline stress

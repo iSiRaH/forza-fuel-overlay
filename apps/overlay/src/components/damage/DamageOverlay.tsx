@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS: DamageSettings = {
   opacity: 0.95,
   scale: 1.0,
   isClickThrough: false,
+  displayMode: 'damage',
 };
 
 export const DamageOverlay: React.FC = () => {
@@ -104,6 +105,7 @@ export const DamageOverlay: React.FC = () => {
       >
         <CompactDamageHUD
           summary={damageSummary}
+          displayMode={settings.displayMode || 'damage'}
           onExpand={() => setSettings((prev) => ({ ...prev, isCompact: false }))}
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
@@ -159,8 +161,15 @@ export const DamageOverlay: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <DamageStatusBanner summary={damageSummary} isConnected={isConnected} />
-      <ComponentDamageList summary={damageSummary} />
+      <DamageStatusBanner
+        summary={damageSummary}
+        isConnected={isConnected}
+        displayMode={settings.displayMode || 'damage'}
+      />
+      <ComponentDamageList
+        summary={damageSummary}
+        displayMode={settings.displayMode || 'damage'}
+      />
 
       {/* In-Overlay Settings Modal */}
       {isSettingsOpen && (

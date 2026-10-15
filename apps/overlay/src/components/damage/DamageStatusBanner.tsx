@@ -5,18 +5,27 @@ import { formatDamagePercent } from '../../utils/damage-calculator.js';
 interface DamageStatusBannerProps {
   summary: VehicleDamageSummary;
   isConnected: boolean;
+  displayMode?: 'damage' | 'condition';
 }
 
-export const DamageStatusBanner: React.FC<DamageStatusBannerProps> = ({ summary, isConnected }) => {
-  const { overallConditionPct, vehicleStatus, overallSeverity } = summary;
+export const DamageStatusBanner: React.FC<DamageStatusBannerProps> = ({
+  summary,
+  isConnected,
+  displayMode = 'damage',
+}) => {
+  const { overallConditionPct, overallDamagePct, vehicleStatus, overallSeverity } = summary;
+
+  const isDamageMode = displayMode === 'damage';
+  const targetPct = isDamageMode
+    ? (overallDamagePct ?? 0)
+    : (overallConditionPct ?? 100);
 
   // SVG Gauge calculations
   const size = 56;
   const strokeWidth = 5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const condition = overallConditionPct ?? 0;
-  const strokeDashoffset = circumference - (condition / 100) * circumference;
+  const strokeDashoffset = circumference - (targetPct / 100) * circumference;
 
   const getStatusColor = () => {
     switch (overallSeverity) {
@@ -41,9 +50,13 @@ export const DamageStatusBanner: React.FC<DamageStatusBannerProps> = ({ summary,
   return (
     <div className="dmg-overall-card">
       <div className="dmg-overall-info">
-        <span className="dmg-overall-label">Vehicle Condition</span>
+        <span className="dmg-overall-label">
+          {isDamageMode ? 'Vehicle Damage' : 'Vehicle Condition'}
+        </span>
         <span className="dmg-overall-status" style={{ color: statusColor }}>
-          {vehicleStatus}
+          {isDamageMode && overallDamagePct !== null && overallDamagePct > 0
+            ? `${vehicleStatus} (${Math.round(overallDamagePct)}%)`
+            : vehicleStatus}
         </span>
         <span className="dmg-telemetry-tag">
           <span className={`dmg-status-dot ${!isConnected ? 'offline' : ''}`} />
@@ -62,8 +75,8 @@ export const DamageStatusBanner: React.FC<DamageStatusBannerProps> = ({ summary,
             strokeWidth={strokeWidth}
             fill="transparent"
           />
-          {/* Active Condition Arc */}
-          {overallConditionPct !== null && (
+          {/* Active Arc */}
+          {(overallConditionPct !== null || overallDamagePct !== null) && (
             <circle
               cx={size / 2}
               cy={size / 2}
@@ -79,7 +92,7 @@ export const DamageStatusBanner: React.FC<DamageStatusBannerProps> = ({ summary,
           )}
         </svg>
         <span className="dmg-gauge-value" style={{ position: 'absolute', color: statusColor }}>
-          {formatDamagePercent(overallConditionPct)}
+          {formatDamagePercent(targetPct)}
         </span>
       </div>
     </div>

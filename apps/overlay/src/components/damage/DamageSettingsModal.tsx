@@ -5,6 +5,7 @@ export interface DamageSettings {
   opacity: number;       // 0.5 - 1.0
   scale: number;         // 0.8 - 1.2
   isClickThrough: boolean;
+  displayMode: 'damage' | 'condition'; // 'damage' matches Forza HUD (0% -> 100%), 'condition' shows health (100% -> 0%)
 }
 
 interface DamageSettingsModalProps {
@@ -27,6 +28,27 @@ export const DamageSettingsModal: React.FC<DamageSettingsModalProps> = ({
         <button className="dmg-icon-btn" onClick={onClose} title="Close settings">
           ✕
         </button>
+      </div>
+
+      {/* Mode selection */}
+      <div className="dmg-setting-row">
+        <span>Display Value Format</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            className={`dmg-icon-btn ${settings.displayMode === 'damage' ? 'active' : ''}`}
+            onClick={() => onUpdate((prev) => ({ ...prev, displayMode: 'damage' }))}
+            title="Shows Damage % (0% = Healthy, 100% = Destroyed) - Matches Forza In-Game HUD"
+          >
+            Damage % (In-Game)
+          </button>
+          <button
+            className={`dmg-icon-btn ${settings.displayMode === 'condition' ? 'active' : ''}`}
+            onClick={() => onUpdate((prev) => ({ ...prev, displayMode: 'condition' }))}
+            title="Shows Health Remaining (100% = Healthy, 0% = Destroyed)"
+          >
+            Health %
+          </button>
+        </div>
       </div>
 
       {/* Mode selection */}
@@ -100,9 +122,13 @@ export const DamageSettingsModal: React.FC<DamageSettingsModalProps> = ({
         </button>
       </div>
 
+      {/* Telemetry info notice */}
       <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '10px' }}>
-        <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, lineHeight: 1.4 }}>
-          💡 <strong>Tip:</strong> Drag the top bar to reposition anywhere on screen. Press <kbd>C</kbd> to toggle between compact and expanded HUD during races.
+        <p style={{ fontSize: '10.5px', color: '#94a3b8', margin: '0 0 6px 0', lineHeight: 1.4 }}>
+          ℹ️ <strong>Forza UDP Stream Info:</strong> Modern Forza games (FH5, FH6, FM) do not stream raw internal damage bytes via UDP Data Out. Damage is simulated in real time using 60Hz physics telemetry (impact G-shocks, over-revs, bottoming, and tire slip).
+        </p>
+        <p style={{ fontSize: '10.5px', color: '#64748b', margin: 0, lineHeight: 1.4 }}>
+          💡 <strong>Tip:</strong> Drag the top bar to reposition anywhere. Press <kbd>C</kbd> to toggle Compact HUD.
         </p>
       </div>
     </div>

@@ -198,7 +198,7 @@ describe('DamageTracker Physics & Degradation Engine', () => {
     assert.equal(respawnState.brakesDamagePct, 0, 'Brakes damage should reset to 0% upon respawn');
   });
 
-  it('should automatically reset damage when player unpauses after "Reset Car Position" in pause menu', () => {
+  it('should preserve damage when player pauses and resumes the game', () => {
     const tracker = new DamageTracker();
 
     // Car damaged
@@ -211,13 +211,14 @@ describe('DamageTracker Physics & Degradation Engine', () => {
     });
 
     // Player opens pause menu (isRaceOn = false)
-    tracker.processTelemetry({
+    const pausedState = tracker.processTelemetry({
       timestampMS: 8500,
       isRaceOn: false,
     });
+    assert.equal(pausedState.engineDamagePct, 40, 'Engine damage should be preserved while paused');
 
-    // Player selects "Reset Car Position" and returns to game (isRaceOn = true, speed = 0, no pedals)
-    const respawnState = tracker.processTelemetry({
+    // Player returns to game (isRaceOn = true, speed = 0, no pedals)
+    const resumedState = tracker.processTelemetry({
       timestampMS: 9000,
       isRaceOn: true,
       speed: 0.0,
@@ -225,8 +226,8 @@ describe('DamageTracker Physics & Degradation Engine', () => {
       brake: 0,
     });
 
-    assert.equal(respawnState.engineDamagePct, 0);
-    assert.equal(respawnState.chassisDamagePct, 0);
+    assert.equal(resumedState.engineDamagePct, 40, 'Engine damage must NOT reset when resuming from pause');
+    assert.equal(resumedState.chassisDamagePct, 30, 'Chassis damage must NOT reset when resuming from pause');
   });
 });
 

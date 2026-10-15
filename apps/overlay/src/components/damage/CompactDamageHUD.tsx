@@ -4,30 +4,44 @@ import { formatDamagePercent } from '../../utils/damage-calculator.js';
 
 interface CompactDamageHUDProps {
   summary: VehicleDamageSummary;
+  displayMode?: 'damage' | 'condition';
   onExpand: () => void;
   onOpenSettings: () => void;
 }
 
 export const CompactDamageHUD: React.FC<CompactDamageHUDProps> = ({
   summary,
+  displayMode = 'damage',
   onExpand,
   onOpenSettings,
 }) => {
-  const { overallConditionPct, components, overallSeverity } = summary;
+  const { overallConditionPct, overallDamagePct, components, overallSeverity } = summary;
   const isCritical = overallSeverity === 'critical';
 
   const engine = components.engine;
   const tires = components.tires;
   const suspension = components.suspension;
 
+  const isDamageMode = displayMode === 'damage';
+  const overallDisplay = isDamageMode
+    ? (overallDamagePct !== null ? formatDamagePercent(overallDamagePct) : 'N/A')
+    : (overallConditionPct !== null ? formatDamagePercent(overallConditionPct) : 'N/A');
+
+  const getPillVal = (comp: typeof engine) => {
+    if (!comp.isAvailable) return 'N/A';
+    return isDamageMode
+      ? formatDamagePercent(comp.damagePercent)
+      : formatDamagePercent(comp.conditionPercent);
+  };
+
   return (
     <div className={`dmg-compact-root ${isCritical ? 'sev-critical' : ''}`}>
       <div className="dmg-compact-bar">
-        {/* Left: Overall condition */}
+        {/* Left: Overall value */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px' }}>💥</span>
           <span style={{ fontSize: '13px', fontWeight: 900, color: '#f8fafc' }}>
-            {formatDamagePercent(overallConditionPct)}
+            {overallDisplay}
           </span>
           {isCritical && (
             <span
@@ -48,24 +62,24 @@ export const CompactDamageHUD: React.FC<CompactDamageHUDProps> = ({
 
         {/* Middle: Key components */}
         <div className="dmg-compact-pill-group">
-          <div className="dmg-compact-pill" title="Engine Condition">
+          <div className="dmg-compact-pill" title={isDamageMode ? 'Engine Damage' : 'Engine Condition'}>
             <span>⚙️</span>
             <span style={{ color: engine.isAvailable ? '#e2e8f0' : '#64748b' }}>
-              {engine.isAvailable ? formatDamagePercent(engine.conditionPercent) : 'N/A'}
+              {getPillVal(engine)}
             </span>
           </div>
 
-          <div className="dmg-compact-pill" title="Tires Condition">
+          <div className="dmg-compact-pill" title={isDamageMode ? 'Tires Damage' : 'Tires Condition'}>
             <span>🛞</span>
             <span style={{ color: tires.isAvailable ? '#e2e8f0' : '#64748b' }}>
-              {tires.isAvailable ? formatDamagePercent(tires.conditionPercent) : 'N/A'}
+              {getPillVal(tires)}
             </span>
           </div>
 
-          <div className="dmg-compact-pill" title="Suspension Condition">
+          <div className="dmg-compact-pill" title={isDamageMode ? 'Suspension Damage' : 'Suspension Condition'}>
             <span>🗜️</span>
             <span style={{ color: suspension.isAvailable ? '#e2e8f0' : '#64748b' }}>
-              {suspension.isAvailable ? formatDamagePercent(suspension.conditionPercent) : 'N/A'}
+              {getPillVal(suspension)}
             </span>
           </div>
         </div>

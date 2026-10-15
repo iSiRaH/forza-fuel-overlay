@@ -8,6 +8,7 @@ import { formatDamagePercent } from '../../utils/damage-calculator.js';
 
 interface ComponentDamageListProps {
   summary: VehicleDamageSummary;
+  displayMode?: 'damage' | 'condition';
 }
 
 const COMPONENT_ICONS: Record<ComponentId, string> = {
@@ -20,7 +21,7 @@ const COMPONENT_ICONS: Record<ComponentId, string> = {
   chassis: '🏎️',
 };
 
-export const ComponentDamageList: React.FC<ComponentDamageListProps> = ({ summary }) => {
+export const ComponentDamageList: React.FC<ComponentDamageListProps> = ({ summary, displayMode = 'damage' }) => {
   const { components, tiresCornerDetail } = summary;
   const componentOrder: ComponentId[] = [
     'engine',
@@ -40,6 +41,7 @@ export const ComponentDamageList: React.FC<ComponentDamageListProps> = ({ summar
           <ComponentItem
             key={id}
             component={comp}
+            displayMode={displayMode}
             tiresCornerDetail={id === 'tires' ? tiresCornerDetail : undefined}
           />
         );
@@ -50,11 +52,12 @@ export const ComponentDamageList: React.FC<ComponentDamageListProps> = ({ summar
 
 interface ComponentItemProps {
   component: ComponentDamageState;
+  displayMode?: 'damage' | 'condition';
   tiresCornerDetail?: VehicleDamageSummary['tiresCornerDetail'];
 }
 
-const ComponentItem: React.FC<ComponentItemProps> = ({ component, tiresCornerDetail }) => {
-  const { id, name, isAvailable, conditionPercent, severity, statusLabel, details } =
+const ComponentItem: React.FC<ComponentItemProps> = ({ component, displayMode = 'damage', tiresCornerDetail }) => {
+  const { id, name, isAvailable, damagePercent, conditionPercent, severity, statusLabel, details } =
     component;
 
   const icon = COMPONENT_ICONS[id] || '🔧';
@@ -100,8 +103,17 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, tiresCornerDet
     ? 'fill-critical'
     : 'fill-unavailable';
 
-  // Condition is 100% when full health, decreasing as damage increases
-  const fillWidth = isAvailable && conditionPercent !== null ? `${Math.max(0, Math.min(100, conditionPercent))}%` : '0%';
+  const isDamageMode = displayMode === 'damage';
+  // In damage mode: bar fills up as damage accumulates. In condition mode: bar drains as health is lost.
+  const displayValue = isDamageMode
+    ? (damagePercent !== null ? formatDamagePercent(damagePercent) : 'N/A')
+    : (conditionPercent !== null ? formatDamagePercent(conditionPercent) : 'N/A');
+
+  const fillWidth = isAvailable
+    ? isDamageMode
+      ? `${Math.max(0, Math.min(100, damagePercent ?? 0))}%`
+      : `${Math.max(0, Math.min(100, conditionPercent ?? 0))}%`
+    : '0%';
 
   return (
     <div className={`dmg-component-item ${!isAvailable ? 'unavailable' : ''}`}>
@@ -121,7 +133,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, tiresCornerDet
             {statusLabel}
           </span>
           <span className={`dmg-comp-pct ${severityClass}`}>
-            {isAvailable ? formatDamagePercent(conditionPercent) : 'N/A'}
+            {isAvailable ? displayValue : 'N/A'}
           </span>
         </div>
       </div>

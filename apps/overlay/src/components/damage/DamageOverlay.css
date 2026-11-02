@@ -187,6 +187,154 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Top-down component map */
+.dmg-car-panel {
+  padding: 9px 10px 10px;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(0, 229, 255, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(4, 10, 18, 0.28), rgba(3, 8, 15, 0.62));
+}
+
+.dmg-car-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3px 6px;
+  color: var(--dmg-text-subtle);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+
+.dmg-car-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 390px;
+  overflow: visible;
+}
+
+.dmg-car-grid line {
+  stroke: #38bdf8;
+  stroke-width: 0.7;
+  stroke-dasharray: 2 7;
+}
+
+.dmg-car-body {
+  --part-color: #64748b;
+  fill: rgba(3, 8, 15, 0.22);
+  stroke: var(--part-color);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--part-color) 42%, transparent));
+  transition: stroke 0.3s ease;
+}
+
+.dmg-car-frame {
+  --part-color: #64748b;
+  fill: none;
+  stroke: color-mix(in srgb, var(--part-color) 72%, #dbeafe);
+  stroke-width: 1.5;
+  opacity: 0.78;
+}
+
+.dmg-car-tires rect {
+  --part-color: #64748b;
+  fill: color-mix(in srgb, var(--part-color) 24%, #05080d);
+  stroke: var(--part-color);
+  stroke-width: 2.3;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--part-color) 45%, transparent));
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.dmg-car-tire-treads line {
+  stroke: rgba(226, 232, 240, 0.45);
+  stroke-width: 0.85;
+}
+
+.dmg-car-axles {
+  fill: none;
+  stroke: rgba(203, 213, 225, 0.68);
+  stroke-width: 1.4;
+}
+
+.dmg-car-brakes,
+.dmg-car-differentials,
+.dmg-car-engine,
+.dmg-car-steering,
+.dmg-car-suspension,
+.dmg-car-driveline {
+  --part-color: #64748b;
+  fill: color-mix(in srgb, var(--part-color) 17%, transparent);
+  stroke: var(--part-color);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--part-color) 36%, transparent));
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.dmg-car-engine path,
+.dmg-car-steering path,
+.dmg-car-suspension path,
+.dmg-car-driveline path {
+  fill: none;
+}
+
+.dmg-car-suspension {
+  stroke-width: 1.45;
+}
+
+.dmg-car-driveline {
+  stroke-width: 2;
+}
+
+.dmg-car-callout-line {
+  fill: none;
+  stroke-width: 0.9;
+  opacity: 0.72;
+  transition: stroke 0.3s ease;
+}
+
+.dmg-car-callout-point {
+  filter: url(#dmg-car-glow);
+  transition: fill 0.3s ease;
+}
+
+.dmg-car-callout-label {
+  fill: #aab8ca;
+  font-size: 8.5px;
+  font-weight: 650;
+  letter-spacing: 0.1px;
+}
+
+.dmg-car-callout-value {
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  transition: fill 0.3s ease;
+}
+
+.dmg-car-callout.sev-critical .dmg-car-callout-point {
+  animation: pulse-car-point 1.15s ease-in-out infinite;
+}
+
+@keyframes pulse-car-point {
+  0%, 100% { opacity: 1; r: 3px; }
+  50% { opacity: 0.55; r: 5px; }
+}
+
+@media (max-height: 560px) {
+  .dmg-overall-card {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .dmg-car-diagram {
+    max-height: 350px;
+  }
+}
+
 /* Component damage list */
 .dmg-component-list {
   padding: 12px 14px;

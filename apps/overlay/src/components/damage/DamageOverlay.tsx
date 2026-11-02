@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTelemetry } from '../../hooks/useTelemetry';
 import { calculateDamage } from '../../utils/damage-calculator';
 import { DamageStatusBanner } from './DamageStatusBanner';
-import { ComponentDamageList } from './ComponentDamageList';
+import { DamageCarDiagram } from './DamageCarDiagram';
 import { CompactDamageHUD } from './CompactDamageHUD';
 import { DamageSettingsModal, type DamageSettings } from './DamageSettingsModal';
 import './DamageOverlay.css';
@@ -166,7 +166,7 @@ export const DamageOverlay: React.FC = () => {
         isConnected={isConnected}
         displayMode={settings.displayMode || 'damage'}
       />
-      <ComponentDamageList
+      <DamageCarDiagram
         summary={damageSummary}
         displayMode={settings.displayMode || 'damage'}
       />

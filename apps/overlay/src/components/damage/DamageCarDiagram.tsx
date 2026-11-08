@@ -17,13 +17,13 @@ interface CalloutProps {
   severity: DamageSeverity;
   side: 'left' | 'right';
   y: number;
-  targetX: number;
-  targetY: number;
+  targetX?: number;
+  targetY?: number;
 }
 
 const SEVERITY_COLORS: Record<DamageSeverity, string> = {
-  healthy: '#00e5ff',
-  minor: '#38bdf8',
+  healthy: '#ffffff',
+  minor: '#facc15',
   moderate: '#f59e0b',
   severe: '#f97316',
   critical: '#ef4444',
@@ -52,12 +52,16 @@ const Callout: React.FC<CalloutProps> = ({
 
   return (
     <g className={`dmg-car-callout sev-${severity}`}>
-      <path
-        d={`M ${lineStartX} ${y} H ${elbowX} L ${targetX} ${targetY}`}
-        stroke={color}
-        className="dmg-car-callout-line"
-      />
-      <circle cx={targetX} cy={targetY} r="3" fill={color} className="dmg-car-callout-point" />
+      {targetX !== undefined && targetY !== undefined && (
+        <>
+          <path
+            d={`M ${lineStartX} ${y} H ${elbowX} L ${targetX} ${targetY}`}
+            stroke={color}
+            className="dmg-car-callout-line"
+          />
+          <circle cx={targetX} cy={targetY} r="3" fill={color} className="dmg-car-callout-point" />
+        </>
+      )}
       <text x={labelX} y={y - 4} textAnchor={anchor} className="dmg-car-callout-label">
         {label}
       </text>
@@ -80,12 +84,18 @@ export const DamageCarDiagram: React.FC<DamageCarDiagramProps> = ({
     if (wear === null || wear === undefined) return tireFallback;
     return displayMode === 'damage' ? wear : Math.max(0, 100 - wear);
   };
-  const tireSeverity = (corner: 'fl' | 'fr' | 'rl' | 'rr') =>
-    tiresCornerDetail?.[corner].severity ?? components.tires.severity;
+  const tireSeverity = (corner: 'fl' | 'fr' | 'rl' | 'rr') => {
+    const detail = tiresCornerDetail?.[corner];
+    return detail?.wear !== null && detail?.wear !== undefined
+      ? detail.severity
+      : components.tires.severity;
+  };
 
-  const engineColor = SEVERITY_COLORS[components.engine.severity];
+  const partClass = (severity: DamageSeverity) => `dmg-car-part dmg-car-part-${severity}`;
+  const hasDamage = (component: ComponentDamageState) =>
+    component.severity !== 'healthy' && component.severity !== 'unavailable';
+
   const chassisColor = SEVERITY_COLORS[components.chassis.severity];
-  const transmissionColor = SEVERITY_COLORS[components.transmission.severity];
   const steeringColor = SEVERITY_COLORS[components.steering.severity];
   const suspensionColor = SEVERITY_COLORS[components.suspension.severity];
   const brakesColor = SEVERITY_COLORS[components.brakes.severity];
@@ -116,93 +126,75 @@ export const DamageCarDiagram: React.FC<DamageCarDiagramProps> = ({
           </filter>
         </defs>
 
-        <g opacity="0.18" className="dmg-car-grid">
-          {[70, 125, 180, 235, 290, 345].map((y) => (
-            <line key={y} x1="96" y1={y} x2="304" y2={y} />
+        {/* Geometry from the supplied vehicle_hud_clean_white.svg. */}
+        <g className="dmg-car-outline" transform="translate(11 0)">
+          <g className={partClass(components.chassis.severity)} stroke={chassisColor}>
+            <path strokeWidth="1.6" d="M114 49 C118 39 123 34 131 30 M265 49 C261 39 255 33 248 29" />
+            <path strokeWidth="1.65" d="M112 318 L112 323 C112 347 144 365 188 366 C232 365 264 347 264 323 L264 317" />
+            <path strokeWidth="1.8" d="M116 45 C115 19 147 8 188 8 C229 8 262 19 263 45 M115 119 V243 M263 119 V243" />
+            <path strokeWidth="1.8" d="M114 131 L94 139 Q92 140 93 149 L114 141 Z M264 131 L284 139 Q286 140 285 149 L264 141 Z" />
+          </g>
+          <g className={partClass(components.steering.severity)} stroke={steeringColor} strokeWidth="1.2">
+            <path d="M136 51 L140 63 M240 51 L236 63" />
+          </g>
+
+          {([
+            ['fl', 110.5, 52.2, 25.5, 60.8, 114.2, 56.4, 18.2, 53],
+            ['fr', 241.5, 52.2, 24.8, 60.8, 245.3, 56.4, 17.4, 53],
+            ['rl', 110.5, 252.5, 25.5, 61.2, 114.2, 256.2, 18.2, 53.7],
+            ['rr', 241.5, 252.5, 24.8, 61.2, 245.3, 256.2, 17.4, 53.7],
+          ] as const).map(([corner, x, y, width, height, innerX, innerY, innerWidth, innerHeight]) => (
+            <g key={corner} className={partClass(tireSeverity(corner))} stroke={tireColors[corner]}>
+              <rect x={x} y={y} width={width} height={height} rx="5.5" strokeWidth="2" />
+              <rect x={innerX} y={innerY} width={innerWidth} height={innerHeight} rx="4.3" strokeWidth="1.05" opacity="0.9" />
+            </g>
           ))}
-          <line x1="200" y1="24" x2="200" y2="372" />
-        </g>
 
-        {/* Open body shell and chassis rails, matching Forza's mechanical damage HUD. */}
-        <path
-          className="dmg-car-body"
-          style={{ '--part-color': chassisColor } as React.CSSProperties}
-          d="M151 73 C153 42 171 27 200 27 C229 27 247 42 249 73 L249 107 L261 130 L252 156 L252 253 L261 278 L249 299 L249 326 C246 352 229 365 200 365 C171 365 154 352 151 326 L151 299 L139 278 L148 253 L148 156 L139 130 L151 107 Z"
-        />
-        <g className="dmg-car-frame" style={{ '--part-color': chassisColor } as React.CSSProperties}>
-          <path d="M161 105 V299 M239 105 V299" />
-          <path d="M161 116 H239 M153 185 H247 M153 210 H247 M161 289 H239" />
-          <path d="M161 156 L180 185 M239 156 L220 185 M161 253 L180 210 M239 253 L220 210" />
-        </g>
-
-        <g className="dmg-car-tires">
-          <rect style={{ '--part-color': tireColors.fl } as React.CSSProperties} x="124" y="70" width="27" height="69" rx="5" />
-          <rect style={{ '--part-color': tireColors.fr } as React.CSSProperties} x="249" y="70" width="27" height="69" rx="5" />
-          <rect style={{ '--part-color': tireColors.rl } as React.CSSProperties} x="124" y="266" width="27" height="69" rx="5" />
-          <rect style={{ '--part-color': tireColors.rr } as React.CSSProperties} x="249" y="266" width="27" height="69" rx="5" />
-          <g className="dmg-car-tire-treads">
-            {[80, 92, 104, 116, 128, 276, 288, 300, 312, 324].map((y) => (
-              <React.Fragment key={y}>
-                <line x1="127" y1={y} x2="148" y2={y} />
-                <line x1="252" y1={y} x2="273" y2={y} />
-              </React.Fragment>
-            ))}
+          <g className={partClass(components.brakes.severity)} stroke={brakesColor} strokeWidth="1.65">
+            <path d="M143 67 Q143 63 147 63 Q152 63 152 69 L152 101 Q152 105 148 105 Q143 105 143 101 Z" />
+            <path d="M223 67 Q223 63 227 63 Q232 63 232 69 L232 101 Q232 105 227 105 Q223 105 223 101 Z" />
+            <path d="M143 266 Q143 262 147 262 Q152 262 152 267 L152 298 Q152 303 148 303 Q143 303 143 298 Z" />
+            <path d="M225 266 Q225 262 230 262 Q233 262 233 267 L233 298 Q233 303 230 303 Q225 303 225 298 Z" />
           </g>
+
+          {[[168, 83], [210, 83], [168, 232], [210, 232]].map(([x, y]) => (
+            <g key={`${x}-${y}`} className={partClass(components.suspension.severity)} transform={`translate(${x} ${y})`} stroke={suspensionColor}>
+              <path strokeWidth="1.85" d="M-16 16 L-14 2 Q-11 -1 -10 -7 Q-9 -14 -2 -15 Q4 -17 8 -10 Q12 -3 12 4 L13 16 Z" />
+              <circle cx="-1" cy="-4" r="3" strokeWidth="1.65" />
+              {[0, 8, 16, 24].map((offset) => (
+                <path key={offset} transform={`translate(0 ${offset})`} strokeWidth="1.45" d="M-16 23 L13 30 L14 34 L-16 27 Z" />
+              ))}
+              <path strokeWidth="1.7" d="M-17 59 L14 59 Q11 68 -1 73 Q-12 70 -17 59 Z" />
+              <circle cx="-1" cy="64" r="3.3" strokeWidth="1.6" />
+            </g>
+          ))}
+
+          {/* Show engine and gearbox locations when those components need attention. */}
+          {hasDamage(components.engine) && (
+            <g className={partClass(components.engine.severity)} stroke={SEVERITY_COLORS[components.engine.severity]} strokeWidth="1.8">
+              <title>{`Engine: ${components.engine.statusLabel}`}</title>
+              <path d="M177 32 H199 V37 H204 V55 H199 V60 H177 V55 H172 V37 H177 Z M180 40 H196 M180 47 H196 M180 54 H196" />
+            </g>
+          )}
+          {hasDamage(components.transmission) && (
+            <g className={partClass(components.transmission.severity)} stroke={SEVERITY_COLORS[components.transmission.severity]} strokeWidth="1.8">
+              <title>{`Transmission: ${components.transmission.statusLabel}`}</title>
+              <path d="M188 170 V184 M180 184 H196 L199 193 V213 L193 224 H183 L177 213 V193 Z M183 195 H193 M183 203 H193 M183 211 H193 M188 224 V282" />
+            </g>
+          )}
         </g>
 
-        {/* Front and rear axles, brake discs, and differentials. */}
-        <g className="dmg-car-axles">
-          <path d="M151 105 H249 M151 300 H249" />
-          <g className="dmg-car-brakes" style={{ '--part-color': brakesColor } as React.CSSProperties}>
-            <circle cx="158" cy="105" r="9" /><circle cx="242" cy="105" r="9" />
-            <circle cx="158" cy="300" r="9" /><circle cx="242" cy="300" r="9" />
-            <path d="M154 99 L162 111 M238 99 L246 111 M154 294 L162 306 M238 294 L246 306" />
-          </g>
-          <g className="dmg-car-differentials" style={{ '--part-color': transmissionColor } as React.CSSProperties}>
-            <path d="M186 105 L193 95 H207 L214 105 L207 115 H193 Z" />
-            <path d="M186 300 L193 290 H207 L214 300 L207 310 H193 Z" />
-            <circle cx="200" cy="105" r="4" /><circle cx="200" cy="300" r="4" />
-          </g>
-        </g>
+        <Callout label="Front left tire" value={tireValue('fl')} severity={tireSeverity('fl')} side="left" y={65} targetX={134} targetY={82} />
+        <Callout label="Steering" value={value(components.steering)} severity={components.steering.severity} side="left" y={32} targetX={149} targetY={57} />
+        <Callout label="Suspension" value={value(components.suspension)} severity={components.suspension.severity} side="left" y={195} targetX={177} targetY={128} />
+        <Callout label="Rear left tire" value={tireValue('rl')} severity={tireSeverity('rl')} side="left" y={270} targetX={134} targetY={283} />
+        <Callout label="Brakes" value={value(components.brakes)} severity={components.brakes.severity} side="left" y={344} targetX={158} targetY={288} />
 
-        {/* Engine and steering rack. */}
-        <g className="dmg-car-engine" style={{ '--part-color': engineColor } as React.CSSProperties}>
-          <rect x="174" y="47" width="52" height="43" rx="8" />
-          <path d="M181 55 H219 M181 64 H219 M181 73 H219 M181 82 H219" />
-          <circle cx="183" cy="68" r="3" /><circle cx="217" cy="68" r="3" />
-        </g>
-        <g className="dmg-car-steering" style={{ '--part-color': steeringColor } as React.CSSProperties}>
-          <path d="M160 123 H240 M169 117 V129 M231 117 V129" />
-          <circle cx="200" cy="123" r="8" />
-          <path d="M194 117 L206 129 M206 117 L194 129" />
-        </g>
-
-        {/* Exposed coil springs are the visual focus of the reference HUD. */}
-        <g className="dmg-car-suspension" style={{ '--part-color': suspensionColor } as React.CSSProperties}>
-          <path d="M173 132 C162 136 184 140 173 144 C162 148 184 152 173 156 C162 160 184 164 173 168 C162 172 184 176 173 180" />
-          <path d="M227 132 C216 136 238 140 227 144 C216 148 238 152 227 156 C216 160 238 164 227 168 C216 172 238 176 227 180" />
-          <path d="M173 218 C162 222 184 226 173 230 C162 234 184 238 173 242 C162 246 184 250 173 254 C162 258 184 262 173 266" />
-          <path d="M227 218 C216 222 238 226 227 230 C216 234 238 238 227 242 C216 246 238 250 227 254 C216 258 238 262 227 266" />
-          <path d="M173 132 V123 M173 180 V188 M227 132 V123 M227 180 V188 M173 218 V210 M173 266 V275 M227 218 V210 M227 266 V275" />
-        </g>
-
-        <g className="dmg-car-driveline" style={{ '--part-color': transmissionColor } as React.CSSProperties}>
-          <path d="M200 113 V292" />
-          <rect x="192" y="181" width="16" height="43" rx="7" />
-          <path d="M196 190 H204 M196 198 H204 M196 206 H204 M196 214 H204" />
-        </g>
-
-        <Callout label="Front left tire" value={tireValue('fl')} severity={tireSeverity('fl')} side="left" y={65} targetX={137} targetY={91} />
-        <Callout label="Steering" value={value(components.steering)} severity={components.steering.severity} side="left" y={126} targetX={173} targetY={123} />
-        <Callout label="Suspension" value={value(components.suspension)} severity={components.suspension.severity} side="left" y={195} targetX={173} targetY={172} />
-        <Callout label="Rear left tire" value={tireValue('rl')} severity={tireSeverity('rl')} side="left" y={270} targetX={137} targetY={300} />
-        <Callout label="Brakes" value={value(components.brakes)} severity={components.brakes.severity} side="left" y={344} targetX={158} targetY={300} />
-
-        <Callout label="Engine" value={value(components.engine)} severity={components.engine.severity} side="right" y={65} targetX={220} targetY={68} />
-        <Callout label="Front right tire" value={tireValue('fr')} severity={tireSeverity('fr')} side="right" y={126} targetX={263} targetY={104} />
-        <Callout label="Chassis" value={value(components.chassis)} severity={components.chassis.severity} side="right" y={195} targetX={239} targetY={185} />
-        <Callout label="Rear right tire" value={tireValue('rr')} severity={tireSeverity('rr')} side="right" y={270} targetX={263} targetY={300} />
-        <Callout label="Transmission" value={value(components.transmission)} severity={components.transmission.severity} side="right" y={344} targetX={207} targetY={300} />
+        <Callout label="Engine" value={value(components.engine)} severity={components.engine.severity} side="right" y={65} />
+        <Callout label="Front right tire" value={tireValue('fr')} severity={tireSeverity('fr')} side="right" y={126} targetX={265} targetY={82} />
+        <Callout label="Chassis" value={value(components.chassis)} severity={components.chassis.severity} side="right" y={195} targetX={274} targetY={195} />
+        <Callout label="Rear right tire" value={tireValue('rr')} severity={tireSeverity('rr')} side="right" y={270} targetX={265} targetY={283} />
+        <Callout label="Transmission" value={value(components.transmission)} severity={components.transmission.severity} side="right" y={344} />
       </svg>
     </section>
   );

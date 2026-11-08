@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { formatGear } from '../../../../packages/shared/src/utils/gear.js';
 import type { SpeedUnit } from '../../../../packages/shared/src/utils/speed.js';
+import taskbarIcon from '../assets/taskbar-icon.jpeg';
 
 interface MinimalFuelOverlayProps {
   telemetry: any;
@@ -109,6 +110,7 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
       {/* Minimal Overlay Header */}
       <header className="minimal-header">
         <div className="minimal-brand">
+          <img src={taskbarIcon} alt="Taskbar Logo" className="minimal-logo-img" />
           <span className="minimal-status-dot" style={{ background: isConnected ? '#00f2fe' : '#ffaa00' }} />
           <span className="minimal-title">FH6 FUEL HUD</span>
           <div className="minimal-pi-badge" style={{ background: piBadgeBg, color: piBadgeColor }}>
@@ -271,6 +273,29 @@ export const MinimalFuelOverlay: React.FC<MinimalFuelOverlayProps> = ({
                 +
               </button>
             </div>
+          </div>
+          <div className="drawer-row">
+            <span className="drawer-label">Damage HUD:</span>
+            <button
+              type="button"
+              className="minimal-action-btn"
+              style={{
+                padding: '4px 10px',
+                fontSize: '11px',
+                background: 'rgba(56, 189, 248, 0.2)',
+                borderColor: 'rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+              }}
+              onClick={() => {
+                if (window.electronAPI?.toggleDamageOverlay) {
+                  window.electronAPI.toggleDamageOverlay();
+                } else {
+                  window.open('/#damage', '_blank', 'width=400,height=540');
+                }
+              }}
+            >
+              💥 Toggle Damage Window
+            </button>
           </div>
           <div className="drawer-row text-muted">
             <span>Car: {carName}</span>

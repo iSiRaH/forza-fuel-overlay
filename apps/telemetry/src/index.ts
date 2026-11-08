@@ -1,7 +1,7 @@
 import { ForzaUDPReceiver } from './udp/receiver.js';
 import { TelemetryWebSocketServer } from './websocket/websocketServer.js';
 import { MockTelemetryGenerator } from './mock/mockGenerator.js';
-import { globalFuelTracker } from './parser/telemetryParser.js';
+import { globalFuelTracker, globalDamageTracker } from './parser/telemetryParser.js';
 
 const PORT = parseInt(process.env.FORZA_UDP_PORT || '5300', 10);
 const HOST = process.env.FORZA_UDP_HOST || '0.0.0.0';
@@ -42,6 +42,9 @@ const wsServer = new TelemetryWebSocketServer({
       if (mockGenerator) {
         mockGenerator.setPaused(isPaused);
       }
+    } else if (msg.type === 'RESET_DAMAGE' || (msg.type as string) === 'REPAIR') {
+      console.log('🔧 Reset / repair damage request received!');
+      globalDamageTracker.reset();
     }
   },
 });

@@ -5,7 +5,6 @@ import {
   mapDamageSeverity,
   normalizeDamagePercent,
   formatDamagePercent,
-  DEFAULT_DAMAGE_THRESHOLDS,
 } from '../../overlay/src/utils/damage-calculator.js';
 import type { ForzaTelemetryData } from '../../../packages/shared/src/types/telemetry.js';
 
